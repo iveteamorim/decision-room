@@ -21,6 +21,17 @@ This leads to:
 - compliance risk
 - poor decision traceability
 
+## What Makes This Different
+
+Most tools manage data or display queues.
+
+Decision Room models decision-making itself through:
+
+- explicit trade-offs
+- explainable outputs
+- auditable decisions
+- human and system collaboration
+
 ## Solution
 
 Decision Room introduces a structured decision engine with:
@@ -112,6 +123,22 @@ It shows:
 - observe decision shifts
 - evaluate trade-offs across scenarios
 
+
+## Screenshots
+
+### Mission Control
+
+![Mission Control](./public/mission-control.png)
+
+### Simulation Lab
+
+![Simulation Lab](./public/simulation-lab.png)
+
+### Decision Workspace
+
+![Decision Workspace](./public/decision-workspace.png)
+
+
 ## Architecture
 
 Frontend:
@@ -158,16 +185,6 @@ This system is designed to evolve into:
 - multi-tenant architecture
 - policy engine integration
 
-## What Makes This Different
-
-Most tools manage data or display queues.
-
-Decision Room models decision-making itself through:
-
-- explicit trade-offs
-- explainable outputs
-- auditable decisions
-- human and system collaboration
 
 ## Live Demo
 
