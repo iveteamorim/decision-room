@@ -188,7 +188,7 @@ This system is designed to evolve into:
 
 ## Live Demo
 
-Add the Vercel URL here after deployment.
+https://decision-room-six.vercel.app
 
 ## Demo Script
 
