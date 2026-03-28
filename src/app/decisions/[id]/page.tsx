@@ -36,7 +36,7 @@ function primaryDecisionLine(
   }
 
   if (item.confidence < 0.55 && action === "review") {
-    return "REVIEW because low confidence blocks autonomous routing on a material-risk item.";
+    return "REVIEW because confidence is too low for autonomous routing.";
   }
 
   if (item.complianceRisk === "high" && action !== "prioritize") {
@@ -61,14 +61,14 @@ function explainRejection(
   }
 
   if (requiresHumanReview) {
-    return "Manual review required due to low confidence conflict on a high-impact item.";
+    return "Manual review required due to confidence conflict.";
   }
 
   if (item.workloadScore > 0.7) {
-    return "Priority upgrade rejected because workload pressure outweighed value capture.";
+    return "Priority upgrade blocked by workload pressure.";
   }
 
-  return "No higher-priority path justified under the current weighted policy profile.";
+  return "No higher-priority path justified.";
 }
 
 function alternativeActions(
@@ -85,12 +85,12 @@ function alternativeActions(
 
 function confidenceMeaning(item: (typeof items)[number], requiresHumanReview: boolean) {
   if (!requiresHumanReview && item.confidence >= 0.8) {
-    return "High confidence -> signal alignment is strong and the engine can act with low ambiguity.";
+    return "High confidence -> low ambiguity.";
   }
   if (!requiresHumanReview && item.confidence >= 0.6) {
-    return "Medium confidence -> recommendation is stable, but competing signals remain visible.";
+    return "Medium confidence -> stable recommendation.";
   }
-  return "Low confidence -> conflicting signals detected. Human review recommended.";
+  return "Low confidence -> human review recommended.";
 }
 
 function actionTone(action: DecisionAction) {
@@ -192,24 +192,24 @@ export default function DecisionPage() {
   }
 
   function handleApprove() {
-    applyOperatorAction("prioritize", "Operator approved priority path", "PRIORITIZE applied by operator to unlock the commercial path.");
+    applyOperatorAction("prioritize", "Operator approved priority path", "Priority path approved by operator.");
   }
 
   function handleDelay() {
-    applyOperatorAction("delay", "Operator delayed action", "DELAY applied by operator to hold the item for a lower-pressure window.");
+    applyOperatorAction("delay", "Operator delayed action", "Delay applied by operator.");
   }
 
   function handleEscalate() {
-    applyOperatorAction("escalate", "Operator escalated item", "ESCALATE applied by operator due to manual risk judgment.");
+    applyOperatorAction("escalate", "Operator escalated item", "Escalated by operator.");
   }
 
   function handleOverride() {
     const reason = overrideReason.trim();
     if (!reason) {
-      setOperatorSummary("Override blocked: a justification is required before forcing a manual path.");
+      setOperatorSummary("Override blocked: justification required.");
       appendEvent(
         "Override blocked",
-        "Attempted override without justification. Reason is mandatory.",
+        "Override rejected: missing reason.",
         "negative",
       );
       return;
@@ -368,11 +368,11 @@ export default function DecisionPage() {
               </div>
               <div style={{ height: 10 }} />
               <textarea
-                placeholder="Override reason required for manual routing."
+                placeholder="Override reason required."
                 value={overrideReason}
                 onChange={(event) => setOverrideReason(event.target.value)}
               />
-              <div className="review-banner">Any override must be justified and auditable.</div>
+              <div className="review-banner">Overrides require justification.</div>
             </section>
 
             <section className="panel compact-panel">

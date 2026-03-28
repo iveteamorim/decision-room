@@ -17,10 +17,10 @@ function actionLabel(result: ReturnType<typeof decideItem>) {
 
 function actionReason(item: (typeof items)[number], result: ReturnType<typeof decideItem>) {
   if (result.policyResult) return `${result.policyResult.action} triggered by ${result.policyResult.triggeredBy.toLowerCase()}`;
-  if (result.requiresHumanReview) return "High risk · low confidence -> human review required.";
-  if (result.action === "prioritize") return "Prioritize now because time pressure and business impact dominate.";
-  if (result.action === "escalate") return "Escalate now because policy or risk threshold blocks normal routing.";
-  return "Hold for later because risk or workload still outweighs immediate action.";
+  if (result.requiresHumanReview) return "High risk · low confidence";
+  if (result.action === "prioritize") return "Time pressure + impact";
+  if (result.action === "escalate") return "Policy threshold hit";
+  return "Risk/workload still dominate";
 }
 
 export default function DashboardPage() {
@@ -56,12 +56,12 @@ export default function DashboardPage() {
           <div className="hero-card hero-primary">
             <div className="metric-label">Exposure at risk</div>
             <div className="hero-value semantic-impact">EUR {exposure.toLocaleString()}</div>
-            <div className="metric-note">money currently sitting in unresolved decisions</div>
+            <div className="metric-note">unresolved exposure</div>
           </div>
           <div className="hero-card hero-secondary">
             <div className="metric-label">Needs human review</div>
             <div className="hero-value">{reviewLocked.length}</div>
-            <div className="metric-note">items blocked by confidence conflict or high-risk policy path</div>
+            <div className="metric-note">review-locked items</div>
           </div>
         </section>
 

@@ -203,8 +203,8 @@ h1, h2, h3, p { margin: 0; }
 }
 
 .review-banner { background: rgba(239, 127, 143, 0.08); }
-.conflict-banner { background: rgba(242, 191, 98, 0.08); }
-.preview-banner { background: rgba(100, 212, 223, 0.08); }
+.conflict-banner { background: rgba(242, 191, 98, 0.12); border-color: rgba(242, 191, 98, 0.24); }
+.preview-banner { background: rgba(100, 212, 223, 0.12); border-color: rgba(100, 212, 223, 0.22); }
 
 .kicker {
   font-size: 0.76rem;
@@ -348,7 +348,7 @@ textarea {
 }
 
 .hero-secondary {
-  background: linear-gradient(135deg, rgba(239, 127, 143, 0.12), rgba(15, 24, 37, 0.96));
+  background: linear-gradient(135deg, rgba(239, 127, 143, 0.18), rgba(15, 24, 37, 0.96));
 }
 
 .hero-value {
@@ -494,3 +494,9 @@ button:active { transform: translateY(0); }
   border-color: rgba(124, 182, 255, 0.52);
   background: rgba(124, 182, 255, 0.18);
 }
+
+.queue-card strong { line-height: 1.2; }
+.metric-note, .queue-meta, .delta-meta { font-size: 0.92rem; }
+.attention-card .conflict-banner { color: #ffd999; }
+.review-banner { border-color: rgba(239, 127, 143, 0.24); }
+.lock-chip { color: var(--muted); }

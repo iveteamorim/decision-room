@@ -31,21 +31,21 @@ function changeReason(entry: {
   if (simulated.action === "prioritize") {
     return {
       change: `Changed: ${baseline.action} -> prioritize`,
-      reason: "Reason: revenue weight dominates",
+      reason: "Reason: revenue dominates",
     };
   }
 
   if (simulated.action === "review") {
     return {
       change: `Changed: ${baseline.action} -> review`,
-      reason: "Reason: middle path beats autonomous routing",
+      reason: "Reason: middle path wins",
     };
   }
 
   if (simulated.action === "reject") {
     return {
       change: `Changed: ${baseline.action} -> reject`,
-      reason: "Reason: risk and workload still dominate",
+      reason: "Reason: risk + workload dominate",
     };
   }
 
@@ -102,12 +102,12 @@ export default function SimulationPage() {
           <div className="hero-card hero-primary">
             <div className="metric-label">Scenario</div>
             <div className="hero-value">Revenue-first</div>
-            <div className="metric-note">More aggressive on high-value items, softer on medium risk.</div>
+            <div className="metric-note">High-value bias, softer on medium risk.</div>
           </div>
           <div className="hero-card hero-secondary">
             <div className="metric-label">Exposure under test</div>
             <div className="hero-value semantic-impact">EUR {simulatedExposure.toLocaleString()}</div>
-            <div className="metric-note">{changed.length} action shifts under this policy profile</div>
+            <div className="metric-note">{changed.length} action shifts</div>
           </div>
         </section>
 
@@ -125,7 +125,7 @@ export default function SimulationPage() {
                     <div className="delta-head">
                       <div>
                         <strong>{item.title}</strong>
-                        <div className="delta-meta">score {simulatedScore.total.toFixed(2)} · impact EUR {item.financialImpactEur.toLocaleString()}</div>
+                        <div className="delta-meta">score {simulatedScore.total.toFixed(2)} · EUR {item.financialImpactEur.toLocaleString()}</div>
                       </div>
                       <span className={`badge badge-${simulated.action}`}>{simulated.action}</span>
                     </div>
@@ -161,10 +161,10 @@ export default function SimulationPage() {
             <section className="panel compact-panel">
               <div className="panel-title"><h2>Global Trade-offs</h2></div>
               <div className="stack compact-stack">
-                <div className="queue-card positive"><strong>Revenue capture</strong><div className="queue-meta">{revenueDelta >= 0 ? "+" : ""}{revenueDelta.toFixed(0)}% · more high-value items unlocked</div></div>
-                <div className="queue-card negative"><strong>Compliance exposure</strong><div className="queue-meta">{riskDelta >= 0 ? "+" : ""}{riskDelta.toFixed(0)}% · policy constraints still dominate restricted items</div></div>
-                <div className="queue-card neutral"><strong>Manual review load</strong><div className="queue-meta">{reviewDelta >= 0 ? "+" : ""}{reviewDelta.toFixed(0)}% · human fallback remains active where confidence is weak</div></div>
-                <div className="queue-card positive"><strong>Decision latency</strong><div className="queue-meta">{latencyDelta >= 0 ? "+" : ""}{latencyDelta}% · fewer slow paths when prioritization expands</div></div>
+                <div className="queue-card positive"><strong>Revenue capture</strong><div className="queue-meta">{revenueDelta >= 0 ? "+" : ""}{revenueDelta.toFixed(0)}% · high-value items unlocked</div></div>
+                <div className="queue-card negative"><strong>Compliance exposure</strong><div className="queue-meta">{riskDelta >= 0 ? "+" : ""}{riskDelta.toFixed(0)}% · restricted items still blocked</div></div>
+                <div className="queue-card neutral"><strong>Manual review load</strong><div className="queue-meta">{reviewDelta >= 0 ? "+" : ""}{reviewDelta.toFixed(0)}% · human fallback still active</div></div>
+                <div className="queue-card positive"><strong>Decision latency</strong><div className="queue-meta">{latencyDelta >= 0 ? "+" : ""}{latencyDelta}% · fewer slow paths</div></div>
               </div>
             </section>
           </aside>
