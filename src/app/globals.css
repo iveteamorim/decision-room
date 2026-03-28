@@ -468,3 +468,29 @@ textarea {
 .queue-card.positive strong, .queue-card.positive .queue-meta { color: var(--mint); }
 .queue-card.negative strong, .queue-card.negative .queue-meta { color: var(--red); }
 .queue-card.neutral strong, .queue-card.neutral .queue-meta { color: var(--muted); }
+
+
+button { cursor: pointer; transition: background 120ms ease, border-color 120ms ease, transform 120ms ease; }
+button:hover { border-color: rgba(124, 182, 255, 0.45); transform: translateY(-1px); }
+button:active { transform: translateY(0); }
+.event-card.positive strong, .event-card.positive .queue-meta { color: var(--mint); }
+.event-card.negative strong, .event-card.negative .queue-meta { color: var(--red); }
+.event-card.neutral strong { color: var(--text); }
+.event-card.muted strong { color: var(--muted); }
+
+
+.action-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(124, 182, 255, 0.32);
+  background: rgba(124, 182, 255, 0.12);
+  color: var(--text);
+  font-weight: 600;
+}
+.action-link:hover {
+  border-color: rgba(124, 182, 255, 0.52);
+  background: rgba(124, 182, 255, 0.18);
+}

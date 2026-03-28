@@ -91,7 +91,7 @@ export default function DashboardPage() {
                   </div>
                   {item.operationalBlock ? <div className="preview-banner">Operational block active</div> : null}
                   <div className="attention-actions">
-                    <Link href={`/decisions/${item.id}`}>Open workspace</Link>
+                    <Link className="action-link" href={`/decisions/${item.id}`}>Open Decision Workspace</Link>
                   </div>
                 </div>
               ))}
@@ -122,6 +122,9 @@ export default function DashboardPage() {
                     <div className="chip-row">
                       <span className="lock-chip locked">review lock</span>
                       <span className="chip">EUR {item.financialImpactEur.toLocaleString()}</span>
+                    </div>
+                    <div className="attention-actions">
+                      <Link className="action-link" href={`/decisions/${item.id}`}>Open Decision Workspace</Link>
                     </div>
                   </div>
                 ))}
