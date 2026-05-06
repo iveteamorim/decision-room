@@ -1,138 +1,198 @@
 import Link from "next/link";
 import { items } from "@/lib/dataset";
 import { decideItem } from "@/lib/decision-engine";
+import type { ApprovalState, WorkItem } from "@/types/decision";
 
-function dominantFactor(result: ReturnType<typeof decideItem>) {
-  return Object.entries(result.scoreBreakdown)
-    .filter(([key]) => key !== "total")
-    .sort((a, b) => Number(b[1]) - Number(a[1]))[0][0];
+const context: Record<string, string> = {
+  "deal-1": "Discount is inside margin guardrails, but approval is time-sensitive.",
+  "deal-2": "High-value contract request pushes margin below the approval threshold.",
+  "deal-3": "Custom liability terms add legal risk before signature.",
+  "deal-4": "Renewal uplift is clean, profitable, and low-risk.",
+  "deal-5": "Expansion forecast has weak confidence and needs human review.",
+  "deal-7": "Pilot economics do not justify approval under current terms.",
+};
+
+function reasonFor(result: ReturnType<typeof decideItem>) {
+  if (result.policyResult) return result.policyResult.reason;
+  if (result.requiresHumanReview) return "Confidence is low, so the operator stays in control.";
+  if (result.action === "approve") return "Margin, risk, urgency, and confidence support approval.";
+  if (result.action === "negotiate") return "The deal has value, but terms need margin protection.";
+  if (result.action === "review") return "The approval requires human judgment before commitment.";
+  return "The value-to-margin trade-off is not strong enough to approve.";
 }
 
-function actionLabel(result: ReturnType<typeof decideItem>) {
-  if (result.requiresHumanReview) return "Act now";
-  if (result.action === "escalate" || result.action === "prioritize") return "Act now";
-  if (result.action === "review") return "Review next";
-  return "Blocked by policy";
+function commandFor(result: ReturnType<typeof decideItem>) {
+  if (result.action === "approve") return "Approve";
+  if (result.action === "negotiate") return "Negotiate";
+  if (result.action === "review") return "Review";
+  return "Reject";
 }
 
-function actionReason(item: (typeof items)[number], result: ReturnType<typeof decideItem>) {
-  if (result.policyResult) return `${result.policyResult.action} triggered by ${result.policyResult.triggeredBy.toLowerCase()}`;
-  if (result.requiresHumanReview) return "High risk · low confidence";
-  if (result.action === "prioritize") return "Time pressure + impact";
-  if (result.action === "escalate") return "Policy threshold hit";
-  return "Risk/workload still dominate";
+function stateLabel(state: ApprovalState) {
+  if (state === "awaiting_approval") return "Awaiting approval";
+  if (state === "policy_conflict") return "Policy conflict";
+  if (state === "legal_review") return "Legal review";
+  if (state === "ready_to_send") return "Ready to send";
+  return "Terms rejected";
+}
+
+function hasStakeholderConflict(item: WorkItem) {
+  return new Set(item.stakeholders.map((stakeholder) => stakeholder.position)).size > 1;
 }
 
 export default function DashboardPage() {
-  const decisions = items.map((item) => ({ item, result: decideItem(item) }));
-  const exposure = decisions.reduce((sum, entry) => sum + entry.item.financialImpactEur, 0);
-  const reviewLocked = decisions.filter((entry) => entry.result.requiresHumanReview);
-  const attentionNow = decisions
-    .filter(
-      (entry) =>
-        entry.result.action === "prioritize" ||
-        entry.result.action === "escalate" ||
-        entry.result.requiresHumanReview,
-    )
-    .sort((a, b) => b.item.financialImpactEur - a.item.financialImpactEur)
-    .slice(0, 5);
+  const decisions = items
+    .map((item) => ({ item, result: decideItem(item) }))
+    .filter((entry) => entry.item.status !== "resolved")
+    .sort((a, b) => b.result.scoreBreakdown.total - a.result.scoreBreakdown.total);
+
+  const top = decisions[0];
+  const valueAtRisk = decisions.reduce((sum, entry) => sum + entry.item.financialImpactEur, 0);
+  const reviewCount = decisions.filter((entry) => entry.result.requiresHumanReview).length;
+  const conflictCount = decisions.filter((entry) => hasStakeholderConflict(entry.item)).length;
 
   return (
-    <main>
-      <div className="shell">
-        <section className="topbar topbar-tight">
+    <main className="dr-page">
+      <header className="dr-nav">
+        <div>
+          <span className="dr-brand">NÓVUA DEAL ROOM</span>
+          <span className="dr-product">AI deal approval support</span>
+        </div>
+        <nav>
+          <Link className="active" href="/dashboard">Workspace</Link>
+          <Link href="/simulation">Simulation</Link>
+        </nav>
+      </header>
+
+      <section className="dr-hero">
+        <div>
+          <p className="dr-kicker">Pricing + discounts + approval governance</p>
+          <h1>Approve better deals. Protect margin.</h1>
+          <p>
+            NÓVUA Deal Room prepares every deal with margin, risk, urgency,
+            confidence, and clear reasoning before approval.
+          </p>
+        </div>
+        <div className="dr-metrics">
           <div>
-            <div className="eyebrow">Decision Room</div>
-            <h1>Mission Control</h1>
-            <p className="subtle">High-stakes decisions across revenue, support, and risk.</p>
+            <span>Pipeline under review</span>
+            <strong>EUR {valueAtRisk.toLocaleString()}</strong>
           </div>
-          <nav className="nav">
-            <Link className="active" href="/dashboard">Mission Control</Link>
-            <Link href="/simulation">Simulation Lab</Link>
-          </nav>
-        </section>
+          <div>
+            <span>Needs approval</span>
+            <strong>{reviewCount}</strong>
+          </div>
+          <div>
+            <span>Team conflicts</span>
+            <strong>{conflictCount}</strong>
+          </div>
+        </div>
+      </section>
 
-        <section className="hero-strip">
-          <div className="hero-card hero-primary">
-            <div className="metric-label">Exposure at risk</div>
-            <div className="hero-value semantic-impact">EUR {exposure.toLocaleString()}</div>
-            <div className="metric-note">unresolved exposure</div>
-          </div>
-          <div className="hero-card hero-secondary">
-            <div className="metric-label">Needs human review</div>
-            <div className="hero-value">{reviewLocked.length}</div>
-            <div className="metric-note">review-locked items</div>
-          </div>
-        </section>
+      <section className="dr-critical-strip">
+        <div>
+          <p>Critical approval now</p>
+          <h2>Enterprise discount needs approval now.</h2>
+          <span>{reasonFor(top.result)} Owner: {top.item.owner}. EUR {top.item.financialImpactEur.toLocaleString()} exposed with a {top.item.slaHours}h deadline.</span>
+        </div>
+        <Link href={`/decisions/${top.item.id}`}>Open approval plan</Link>
+      </section>
 
-        <section className="focus-layout">
-          <section className="panel attention-panel">
-            <div className="panel-title">
-              <h2>Attention Now</h2>
-              <span className="chip">start with the highest exposure</span>
+      <section className="dr-workspace">
+        <div className="dr-list-panel">
+          <div className="dr-panel-head">
+            <div>
+              <p>Deal queue</p>
+              <h2>Deals ranked by the engine</h2>
             </div>
-            <div className="attention-list">
-              {attentionNow.map(({ item, result }) => (
-                <div className="attention-card" key={item.id}>
-                  <div className="stream-head">
-                    <div>
-                      <strong>{item.title}</strong>
-                      <div className="stream-meta">{actionLabel(result)} · {item.type} · {item.id} · SLA {item.slaHours}h</div>
-                    </div>
-                    <span className={`badge badge-${result.action}`}>{result.action}</span>
+            <span>{decisions.length} active deals</span>
+          </div>
+
+          <div className="dr-case-list">
+            {decisions.slice(0, 5).map(({ item, result }, index) => (
+              <Link
+                className={`dr-case ${index === 0 ? "selected critical" : ""} ${item.decisionRisk === "high" ? "risk-high" : ""}`}
+                href={`/decisions/${item.id}`}
+                key={item.id}
+              >
+                <span className="dr-rank">{index + 1}</span>
+                <div className="dr-case-body">
+                  <div className="dr-case-title">
+                    <strong>{item.title}</strong>
+                    <em className={`dr-badge ${result.action}`}>{result.action}</em>
                   </div>
-                  <div className="conflict-banner" style={{ marginBottom: 10 }}>
-                    {actionReason(item, result)}
+                  <p>{context[item.id] ?? item.title}</p>
+                  <div className="dr-state-row">
+                    <span>{stateLabel(item.approvalState)}</span>
+                    <span>Owner: {item.owner}</span>
+                    <span>{item.blockers.length} blockers</span>
+                    {hasStakeholderConflict(item) ? <strong>Team conflict</strong> : null}
                   </div>
-                  <div className="chip-row">
-                    <span className="chip">{dominantFactor(result)} dominated</span>
-                    <span className="chip">EUR {item.financialImpactEur.toLocaleString()} at risk</span>
-                    <span className="chip">{item.complianceRisk} compliance risk</span>
-                  </div>
-                  {item.operationalBlock ? <div className="preview-banner">Operational block active</div> : null}
-                  <div className="attention-actions">
-                    <Link className="action-link" href={`/decisions/${item.id}`}>Open Decision Workspace</Link>
+                  <div className="dr-signals">
+                    <span>EUR {item.financialImpactEur.toLocaleString()}</span>
+                    <span>{Math.round(item.marginScore * 100)}% margin</span>
+                    <span>{Math.round(item.riskScore * 100)}% risk</span>
+                    <span>{item.slaHours}h deadline</span>
                   </div>
                 </div>
-              ))}
-            </div>
-          </section>
+              </Link>
+            ))}
+          </div>
+        </div>
 
-          <aside className="side-stack">
-            <section className="panel compact-panel">
-              <div className="panel-title">
-                <h2>Decision Pressure</h2>
+        <aside className="dr-decision-panel">
+          <p className="dr-kicker">Engine output</p>
+          <h2>{top.item.title}</h2>
+          <div className={`dr-action ${top.result.action}`}>{commandFor(top.result)}</div>
+          <span className={`dr-badge ${top.result.action}`}>{top.result.action}</span>
+          <p>{reasonFor(top.result)}</p>
+          <div className="dr-score">
+            <span style={{ width: `${Math.round(top.result.scoreBreakdown.total * 100)}%` }} />
+          </div>
+          <div className="dr-panel-warning">
+            <strong>Approval pressure</strong>
+            <span>{top.result.policyResult ? top.result.policyResult.triggeredBy : "Score threshold"}</span>
+          </div>
+          <div className="dr-stakeholder-list">
+            <p>Stakeholder positions</p>
+            {top.item.stakeholders.map((stakeholder) => (
+              <div key={stakeholder.team}>
+                <strong>{stakeholder.team}</strong>
+                <span className={`dr-badge ${stakeholder.position}`}>{stakeholder.position}</span>
               </div>
-              <div className="stack compact-stack">
-                <div className="queue-card"><strong>Revenue pressure</strong><div className="mini-row"><span>financial exposure</span><span>EUR {exposure.toLocaleString()}</span></div></div>
-                <div className="queue-card"><strong>Compliance pressure</strong><div className="mini-row"><span>high-risk items</span><span>{items.filter((item) => item.complianceRisk === "high").length}</span></div></div>
-                <div className="queue-card"><strong>Blocked operations</strong><div className="mini-row"><span>operational blocks</span><span>{items.filter((item) => item.operationalBlock).length}</span></div></div>
-              </div>
-            </section>
+            ))}
+          </div>
+          <div className="dr-breakdown">
+            <div><span>Deal value</span><strong>EUR {top.item.valueEur.toLocaleString()}</strong></div>
+            <div><span>Margin</span><strong>{Math.round(top.item.marginScore * 100)}%</strong></div>
+            <div><span>Risk</span><strong>{Math.round(top.item.riskScore * 100)}%</strong></div>
+          </div>
+          <Link className="dr-primary" href={`/decisions/${top.item.id}`}>Open approval plan</Link>
+        </aside>
+      </section>
 
-            <section className="panel compact-panel">
-              <div className="panel-title">
-                <h2>Needs Human Review</h2>
-              </div>
-              <div className="stack compact-stack">
-                {reviewLocked.map(({ item, result }) => (
-                  <div className="queue-card" key={item.id}>
-                    <strong>{item.title}</strong>
-                    <div className="queue-meta">{actionReason(item, result)}</div>
-                    <div className="chip-row">
-                      <span className="lock-chip locked">review lock</span>
-                      <span className="chip">EUR {item.financialImpactEur.toLocaleString()}</span>
-                    </div>
-                    <div className="attention-actions">
-                      <Link className="action-link" href={`/decisions/${item.id}`}>Open Decision Workspace</Link>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </aside>
-        </section>
-      </div>
+      <section className="dr-capabilities">
+        <div>
+          <span>01</span>
+          <strong>Approval policies</strong>
+          <p>Hard rules protect margin, legal exposure, and approval thresholds before scoring.</p>
+        </div>
+        <div>
+          <span>02</span>
+          <strong>Weighted scoring</strong>
+          <p>Deal value, margin, risk, urgency, and confidence are explicit and adjustable.</p>
+        </div>
+        <div>
+          <span>03</span>
+          <strong>Explainability</strong>
+          <p>Every recommendation exposes why a deal should be approved, negotiated, reviewed, or rejected.</p>
+        </div>
+        <div>
+          <span>04</span>
+          <strong>Human override</strong>
+          <p>Sensitive approvals stay reviewable instead of pretending full autonomy is safe.</p>
+        </div>
+      </section>
     </main>
   );
 }

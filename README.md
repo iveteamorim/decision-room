@@ -1,242 +1,69 @@
-# Decision Room
+# NÓVUA Deal Room
 
-**AI decision workspace for high-risk operational cases.**
+**AI decision support for pricing, discounts, and deal approvals.**
 
-Decision Room helps teams evaluate time-sensitive cases where revenue, risk, urgency, and workload must be balanced under pressure.
+NÓVUA Deal Room helps teams evaluate deals before approval by combining deal value, margin, urgency, risk, confidence, policy rules, and transparent reasoning.
 
----
+Live demo: https://decision-room-six.vercel.app
 
-## Live Links
+## Problem
 
-* Live Demo: https://decision-room-six.vercel.app
-* GitHub: https://github.com/iveteamorim/decision-room
+Deal approvals often happen under pressure across Sales, Finance, Legal, and leadership.
 
----
+Teams need to close fast, but they also need to protect margin, avoid risky terms, and keep approval logic consistent.
 
-## Overview
+## Product
 
-Critical operational decisions often break down when multiple constraints compete at once.
-Teams move slowly, justify decisions inconsistently, and lose visibility into why one action was chosen over another.
+Deal Room prepares every deal with:
 
-Decision Room introduces a structured decision layer that helps teams:
+* Margin and pricing risk analysis
+* Policy checks before approval
+* Weighted scoring across explicit signals
+* Explainable recommendations
+* Human review for sensitive or low-confidence deals
+* Simulation for pricing strategy changes
 
-* Evaluate high-risk items through explicit signals
-* Apply policy constraints before automation
-* Explain why a decision was made
-* Keep a human override path for ambiguous or sensitive cases
+The system does not approve deals autonomously. It prepares the decision, explains the trade-offs, and keeps the final approval human-controlled.
 
----
+## Core Workflow
 
-## Who is this for
-
-Teams handling operational cases where business value, risk, and urgency must be balanced, such as:
-
-* Revenue and deal review workflows
-* Support escalation and triage
-* Risk or compliance-sensitive cases
-
----
-
-## How It Works
-
-1. **Case ingestion**  
-   A case enters the workspace with structured inputs such as value, urgency, risk, confidence, and workload.
+1. **Deal intake**  
+   A deal enters the workspace with structured inputs: value, margin, risk, urgency, confidence, and approval deadline.
 
 2. **Policy evaluation**  
-   Hard rules are evaluated first to catch conditions that should override score-driven behavior.
+   Hard rules protect margin thresholds, legal exposure, and high-risk approvals before score-based recommendations.
 
 3. **Weighted scoring**  
-   Each case is scored across normalized signals to produce an actionable recommendation.
+   The engine calculates an approval-readiness score from inspectable signals.
 
-4. **Explainability layer**  
-   The system exposes signal contribution, policy hits, and threshold mapping behind the recommendation.
+4. **Recommendation**  
+   Each deal maps to one action: approve, negotiate, review, or reject.
 
-5. **Human override**  
-   Operators can review or override the recommendation when confidence or sensitivity requires it.
+5. **Reasoning trace**  
+   The UI explains why the recommendation was made and which policy or score threshold influenced it.
 
 6. **Simulation**  
-   Teams can adjust strategy weights and observe how decisions shift across the case set.
+   Teams can test strategy changes, such as “what changes if margin matters more?”
 
----
+## Why It Matters
 
-## Architecture
+This is decision support, not a chatbot wrapper.
 
-![Mission Control](./public/mission-control.png)
+Deal Room shows how AI can support real business governance:
 
-### Stack
+* Explainability
+* Approval traceability
+* Human-in-the-loop review
+* Policy-aware automation
+* Strategy simulation before workflow changes
 
-* **Frontend / Backend:** Next.js (App Router + Route Handlers)
-* **Language:** TypeScript
-* **Decision Layer:** Policy evaluation + weighted scoring
-* **Deployment:** Vercel
+## Stack
 
----
-
-## Technical Docs
-
-* [Decisions](./docs/DECISIONS.md)
-* [Failure Modes](./docs/FAILURE_MODES.md)
-
----
-
-## Technical Decisions
-
-This system is designed as a decision-support layer, not as a background automation engine.
-
-* **Policy layer before scoring**  
-  Hard constraints run before weighted scoring so the system can enforce non-negotiable rules before considering softer optimization signals.
-
-* **Weighted scoring instead of opaque model output**  
-  Recommendations are derived from explicit signal weights to keep the reasoning inspectable and adjustable.
-
-* **Human-in-the-loop by design**  
-  Sensitive or low-confidence cases keep a manual review path instead of forcing automation where auditability matters more than throughput.
-
-* **Simulation as a product feature**  
-  Strategy tuning is exposed directly in the product so teams can compare revenue-first, risk-first, and balanced operating models without rewriting the core engine.
-
----
-
-## System Boundaries
-
-This system focuses on:
-
-* Operational case evaluation
-* Decision explainability
-* Strategy simulation
-* Human override on sensitive decisions
-
-It does not attempt to solve:
-
-* Full CRM lifecycle management
-* Full ticketing or compliance case management
-* Autonomous decision execution across external systems
-
----
-
-## Trade-offs
-
-* **Deterministic scoring vs model-led autonomy**  
-  The current system favors explicit scoring logic over a fully model-driven decision path. This improves transparency but reduces flexibility.
-
-* **Simulation dataset vs real system integrations**  
-  The product currently demonstrates decision behavior through a controlled dataset rather than live production integrations.
-
-* **Explainability depth vs workflow breadth**  
-  The product goes deep on why decisions happen, but stays narrow on downstream execution and lifecycle management.
-
-* **Single decision workspace vs domain-specific tooling**  
-  A unified decision model improves consistency across use cases, but can abstract away domain-specific nuance if pushed too far.
-
----
-
-## Expected Impact
-
-This system is designed to:
-
-* Reduce inconsistency in high-risk decisions
-* Improve explainability of automated recommendations
-* Make policy constraints visible in operational workflows
-* Help teams compare strategy trade-offs before applying them
-
-> Note: Impact is based on system design and expected workflow behavior, not measured production data.
-
----
-
-## Production Readiness
-
-This system is currently designed as a functional decision-engine demo with a clear path to production hardening.
-
-### Current capabilities
-
-* Weighted scoring engine
-* Policy override layer
-* Explainability breakdown per case
-* Human override workflow
-* Strategy simulation across scenarios
-
-### Current limitations
-
-* No persistent audit storage
-* No real external system ingestion
-* No role-based decision governance
-* No queueing or event-driven orchestration
-
-### Next steps
-
-* Persistent audit log and review history
-* Integration with real source systems
-* Role-aware approval workflows
-* Configurable policy management
-
----
-
-## Failure Modes & Engineering Risks
-
-While the system is intentionally explicit and explainable, several risks appear as soon as it moves toward production:
-
-* **Policy collisions**  
-  Overlapping hard rules can create contradictory decision paths if policy precedence is not strictly defined.
-
-* **Scoring bias**  
-  Incorrect weights can systematically favor revenue, urgency, or workload in ways that distort operator behavior.
-
-* **False confidence**  
-  A clear recommendation UI can make weak inputs appear more trustworthy than they are.
-
-* **Simulation drift**  
-  Strategy behavior validated on synthetic or controlled datasets may not hold under real operational noise.
-
-* **Missing audit persistence**  
-  Without durable storage, overrides and rationale can be lost, reducing accountability.
-
----
-
-## Mitigation Strategy (Planned)
-
-* Explicit policy precedence rules
-* Weight review and calibration against real outcomes
-* Confidence-aware review thresholds
-* Persistent audit trail for overrides and rationale
-* Real-world validation before automated downstream actions
-
----
-
-## Positioning
-
-Decision Room is not a dashboard for passive monitoring.
-
-It is an **AI decision workspace for high-risk operational cases**, designed to structure reasoning, expose trade-offs, and keep human control where the cost of being wrong is high.
-
-The goal is not blind automation —  
-but consistent, explainable, auditable decision-making under pressure.
-
----
-
-## Screenshots
-
-### Mission Control
-
-![Mission Control](./public/mission-control.png)
-
-### Simulation Lab
-
-![Simulation Lab](./public/simulation-lab.png)
-
-### Decision Workspace
-
-![Decision Workspace](./public/decision-workspace.png)
-
----
-
-## Project Structure
-
-* `src/app` – pages, routes, and route handlers
-* `src/components` – UI and workflow components
-* `src/lib` – scoring, policies, dataset, and decision engine logic
-* `public` – screenshots and static assets
-
----
+* Next.js App Router
+* TypeScript
+* Policy evaluation engine
+* Weighted scoring model
+* Vercel deployment
 
 ## Local Setup
 
@@ -246,8 +73,6 @@ npm run dev
 ```
 
 Open: http://localhost:3000
-
----
 
 ## Scripts
 

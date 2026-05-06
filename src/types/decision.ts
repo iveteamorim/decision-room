@@ -1,10 +1,9 @@
-export type WorkItemType = "lead" | "ticket" | "case";
+export type WorkItemType = "discount" | "renewal" | "contract" | "expansion";
 
 export type DecisionAction =
-  | "prioritize"
+  | "approve"
+  | "negotiate"
   | "review"
-  | "delay"
-  | "escalate"
   | "reject";
 
 export type WorkItemStatus =
@@ -15,6 +14,28 @@ export type WorkItemStatus =
 
 export type RiskLevel = "low" | "medium" | "high";
 
+export type Team = "Sales" | "Finance" | "Legal" | "Ops" | "Policy";
+
+export type ApprovalState =
+  | "awaiting_approval"
+  | "policy_conflict"
+  | "legal_review"
+  | "ready_to_send"
+  | "terms_rejected";
+
+export interface StakeholderPosition {
+  team: Team;
+  position: DecisionAction;
+  note: string;
+}
+
+export interface AuditEvent {
+  time: string;
+  actor: Team | "System";
+  event: string;
+  tone: "neutral" | "warning" | "success" | "danger";
+}
+
 export interface WorkItem {
   id: string;
   type: WorkItemType;
@@ -22,13 +43,18 @@ export interface WorkItem {
   valueEur: number;
   riskScore: number;
   urgencyScore: number;
-  workloadScore: number;
+  marginScore: number;
   confidence: number;
   slaHours: number;
   status: WorkItemStatus;
   financialImpactEur: number;
-  complianceRisk: RiskLevel;
-  operationalBlock: boolean;
+  decisionRisk: RiskLevel;
+  policyBlock: boolean;
+  approvalState: ApprovalState;
+  owner: Team;
+  blockers: string[];
+  stakeholders: StakeholderPosition[];
+  auditTrail: AuditEvent[];
 }
 
 export interface PolicyResult {
@@ -38,17 +64,17 @@ export interface PolicyResult {
 }
 
 export interface ScoreWeights {
-  revenue: number;
+  value: number;
   risk: number;
   urgency: number;
-  workload: number;
+  margin: number;
 }
 
 export interface ScoreBreakdown {
-  revenue: number;
+  value: number;
   risk: number;
   urgency: number;
-  workload: number;
+  margin: number;
   total: number;
 }
 

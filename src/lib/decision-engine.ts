@@ -3,18 +3,18 @@ import { defaultWeights, scoreItem } from "@/lib/scoring";
 import type { DecisionAction, DecisionResult, ScoreWeights, WorkItem } from "@/types/decision";
 
 function chooseAction(total: number): DecisionAction {
-  if (total >= 0.72) return "prioritize";
-  if (total >= 0.56) return "review";
-  if (total >= 0.4) return "delay";
+  if (total >= 0.72) return "approve";
+  if (total >= 0.56) return "negotiate";
+  if (total >= 0.4) return "review";
   return "reject";
 }
 
 function buildRationale(item: WorkItem, total: number) {
   return [
     `Value EUR: ${item.valueEur}`,
+    `Margin score: ${item.marginScore.toFixed(2)}`,
     `Risk score: ${item.riskScore.toFixed(2)}`,
     `Urgency score: ${item.urgencyScore.toFixed(2)}`,
-    `Workload score: ${item.workloadScore.toFixed(2)}`,
     `Confidence: ${item.confidence.toFixed(2)}`,
     `Composite score: ${total.toFixed(2)}`,
   ];
