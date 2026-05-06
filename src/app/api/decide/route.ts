@@ -1,9 +1,19 @@
-import { decideItem } from "@/lib/decision-engine";
-import type { WorkItem } from "@/types/decision";
+import { decideItem, parseWorkItemPayload } from "@/engine/deal-room";
 
 export async function POST(request: Request) {
-  const item = (await request.json()) as WorkItem;
-  const result = decideItem(item);
+  let payload: unknown;
 
-  return Response.json(result);
+  try {
+    payload = await request.json();
+  } catch {
+    return Response.json({ error: "Invalid JSON request body." }, { status: 400 });
+  }
+
+  const intake = parseWorkItemPayload(payload);
+
+  if (!intake.ok) {
+    return Response.json({ error: intake.error }, { status: 400 });
+  }
+
+  return Response.json(decideItem(intake.item));
 }

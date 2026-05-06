@@ -1,3 +1,10 @@
+export { items } from "./fixtures";
+export { decideItem } from "./decision-engine";
+export { evaluatePolicies, applyPolicies, approvalPolicyRegistry } from "./policies";
+export { defaultWeights, scoreDeal, extractAiAssistedSignals } from "./scoring";
+export { buildWorkflowPlan } from "./workflow";
+export { marginFirstScenario, simulateDealPortfolio } from "./simulation";
+export { parseWorkItemPayload } from "./intake";
 export type {
   AiAssistedSignal,
   ApprovalState,
@@ -27,4 +34,4 @@ export type {
   WorkItem,
   WorkItemStatus,
   WorkItemType,
-} from "@/engine/deal-room";
+} from "./types";

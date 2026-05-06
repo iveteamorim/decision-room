@@ -1,31 +1,8 @@
-import type { ScoreBreakdown, ScoreWeights, WorkItem } from "@/types/decision";
+import { scoreDeal } from "@/engine/deal-room";
+import type { ScoreWeights, WorkItem } from "@/engine/deal-room";
 
-export const defaultWeights: ScoreWeights = {
-  value: 0.35,
-  risk: 0.25,
-  urgency: 0.15,
-  margin: 0.25,
-};
+export { defaultWeights, extractAiAssistedSignals } from "@/engine/deal-room";
 
-function normalizeValue(valueEur: number) {
-  return Math.min(valueEur / 25000, 1);
-}
-
-export function scoreItem(
-  item: WorkItem,
-  weights: ScoreWeights = defaultWeights,
-): ScoreBreakdown {
-  const value = normalizeValue(item.valueEur) * weights.value;
-  const risk = (1 - item.riskScore) * weights.risk;
-  const urgency = item.urgencyScore * weights.urgency;
-  const margin = item.marginScore * weights.margin;
-  const total = value + risk + urgency + margin;
-
-  return {
-    value,
-    risk,
-    urgency,
-    margin,
-    total,
-  };
+export function scoreItem(item: WorkItem, weights?: ScoreWeights) {
+  return scoreDeal(item, weights).breakdown;
 }

@@ -45,6 +45,58 @@ The system does not approve deals autonomously. It prepares the decision, explai
 6. **Simulation**  
    Teams can test strategy changes, such as “what changes if margin matters more?”
 
+## Decision Engine Architecture
+
+The UI is intentionally thin. The core product logic lives under:
+
+```txt
+src/engine/deal-room/
+├── decision-engine.ts   # Orchestrates policy, scoring, workflow, and explanation
+├── policies.ts          # Deterministic approval governance and escalation registry
+├── scoring.ts           # Deterministic + AI-assisted scoring contract
+├── workflow.ts          # Approval checkpoints, owners, blockers, and side effects
+├── explainability.ts    # Reasoning trace and auditable recommendation narrative
+├── simulation.ts        # Portfolio-level scenario simulation
+├── intake.ts            # API payload validation before engine execution
+├── fixtures.ts          # Enterprise-style deal approval examples
+├── types.ts             # Domain contracts
+└── index.ts             # Public engine API
+```
+
+### Operating Principles
+
+* Deterministic rules are the source of truth for policy violations.
+* AI-assisted reasoning is contextual and assistive, not autonomous approval authority.
+* Every recommendation returns policy trace, score evidence, confidence context, workflow checkpoints, and operational side effects.
+* Human checkpoints remain explicit for low-confidence, high-risk, conflicted, or policy-sensitive deals.
+* Approval chains are modeled across Sales, Finance, Legal, Ops, and Policy.
+* Simulations run through the same engine contract as live recommendations.
+
+### Engine Flow
+
+```txt
+Deal intake
+  -> deterministic policy evaluation
+  -> AI-assisted context adapter
+  -> weighted scoring
+  -> action selection
+  -> workflow/checkpoint planning
+  -> explanation + audit trace
+  -> UI/API consumer
+```
+
+### Public API Surface
+
+The app consumes the engine through stable functions:
+
+* `decideItem(item, weights?)`
+* `evaluatePolicies(item)`
+* `scoreDeal(item, weights?)`
+* `buildWorkflowPlan(item, action, policies)`
+* `simulateDealPortfolio(items, scenario?)`
+
+Compatibility adapters remain in `src/lib/*`, but new product logic should be added to `src/engine/deal-room/*`.
+
 ## Why It Matters
 
 This is decision support, not a chatbot wrapper.

@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { items } from "@/lib/dataset";
-import { decideItem } from "@/lib/decision-engine";
-import type { ApprovalState, WorkItem } from "@/types/decision";
+import { decideItem, items } from "@/engine/deal-room";
+import type { ApprovalState, WorkItem } from "@/engine/deal-room";
 
 const context: Record<string, string> = {
   "deal-1": "Discount is inside margin guardrails, but approval is time-sensitive.",
