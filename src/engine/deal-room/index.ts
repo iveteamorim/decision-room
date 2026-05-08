@@ -5,12 +5,19 @@ export { defaultWeights, scoreDeal, extractAiAssistedSignals } from "./scoring";
 export { buildWorkflowPlan } from "./workflow";
 export { marginFirstScenario, simulateDealPortfolio } from "./simulation";
 export { parseWorkItemPayload } from "./intake";
+export { buildDecisionEvents, buildDecisionLedger, replayDecisionLedger } from "./events";
 export type {
   AiAssistedSignal,
   ApprovalState,
   AuditEvent,
   CheckpointStatus,
   DecisionAction,
+  DecisionEvent,
+  DecisionEventMetadata,
+  DecisionEventSeverity,
+  DecisionEventType,
+  DecisionLedger,
+  DecisionReplay,
   DecisionResult,
   ExplanationStep,
   PolicyEvaluation,

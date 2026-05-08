@@ -2,6 +2,12 @@
 
 **AI decision support for pricing, discounts, and deal approvals.**
 
+NÓVUA Deal Room is an AI-assisted decision engine for pricing, discounts, and deal approvals.
+
+It combines deterministic policies, weighted scoring, human checkpoints, explainability traces, and simulation workflows.
+
+AI supports the reasoning process, but policy and human approval remain the source of truth.
+
 NÓVUA Deal Room helps teams evaluate deals before approval by combining deal value, margin, urgency, risk, confidence, policy rules, and transparent reasoning.
 
 Live demo: https://decision-room-six.vercel.app

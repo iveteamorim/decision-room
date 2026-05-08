@@ -1,4 +1,5 @@
 import { buildExplanation, buildRationale } from "./explainability";
+import { buildDecisionLedger } from "./events";
 import { evaluatePolicies } from "./policies";
 import { defaultWeights, scoreDeal } from "./scoring";
 import { buildWorkflowPlan } from "./workflow";
@@ -35,6 +36,13 @@ export function decideItem(
     policyEvaluation.decisivePolicy?.action,
   );
   const workflow = buildWorkflowPlan(item, action, policyEvaluation);
+  const ledger = buildDecisionLedger({
+    item,
+    action,
+    scoring,
+    policyEvaluation,
+    workflow,
+  });
   const requiresHumanReview =
     action === "review" ||
     workflow.checkpoints.some((checkpoint) => checkpoint.status === "blocked");
@@ -50,6 +58,7 @@ export function decideItem(
     policyTrace: policyEvaluation.trace,
     workflow,
     aiAssistedSignal: scoring.aiAssistedSignal,
+    ledger,
     requiresHumanReview,
   };
 }

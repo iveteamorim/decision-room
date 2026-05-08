@@ -27,6 +27,20 @@ export type PolicySeverity = "info" | "warning" | "blocker";
 
 export type CheckpointStatus = "open" | "passed" | "blocked" | "not_required";
 
+export type DecisionEventType =
+  | "deal_intaken"
+  | "policy_evaluated"
+  | "score_calculated"
+  | "checkpoint_opened"
+  | "checkpoint_blocked"
+  | "deal_escalated"
+  | "approval_recommended"
+  | "decision_replayed";
+
+export type DecisionEventSeverity = "info" | "warning" | "critical";
+
+export type DecisionEventMetadata = Record<string, string | number | boolean | null>;
+
 export interface StakeholderPosition {
   team: Team;
   position: DecisionAction;
@@ -142,6 +156,33 @@ export interface WorkflowPlan {
   sideEffects: string[];
 }
 
+export interface DecisionEvent {
+  id: string;
+  type: DecisionEventType;
+  dealId: string;
+  occurredAt: string;
+  actor: Team | "System";
+  owner: Team;
+  severity: DecisionEventSeverity;
+  action?: DecisionAction;
+  confidence: number;
+  reason: string;
+  policyIds: string[];
+  checkpointIds: string[];
+  metadata: DecisionEventMetadata;
+}
+
+export interface DecisionLedger {
+  dealId: string;
+  currentOwner: Team;
+  openCheckpointIds: string[];
+  blockedCheckpointIds: string[];
+  matchedPolicyIds: string[];
+  latestRecommendation: DecisionAction;
+  latestConfidence: number;
+  events: DecisionEvent[];
+}
+
 export interface ExplanationStep {
   title: string;
   body: string;
@@ -159,7 +200,22 @@ export interface DecisionResult {
   policyTrace: PolicyTraceEntry[];
   workflow: WorkflowPlan;
   aiAssistedSignal: AiAssistedSignal;
+  ledger: DecisionLedger;
   requiresHumanReview: boolean;
+}
+
+export interface DecisionReplay {
+  dealId: string;
+  eventCount: number;
+  finalOwner: Team;
+  finalRecommendation?: DecisionAction;
+  matchedPolicyIds: string[];
+  blockedCheckpointIds: string[];
+  confidenceTimeline: Array<{
+    eventId: string;
+    confidence: number;
+    reason: string;
+  }>;
 }
 
 export interface SimulationScenario {
