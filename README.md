@@ -10,7 +10,7 @@ AI supports the reasoning process, but policy and human approval remain the sour
 
 NÓVUA Deal Room helps teams evaluate deals before approval by combining deal value, margin, urgency, risk, confidence, policy rules, and transparent reasoning.
 
-Live demo: https://decision-room-six.vercel.app
+Live demo: https://decision-room-six.vercel.app/dashboard
 
 ## Problem
 
