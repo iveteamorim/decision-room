@@ -138,3 +138,14 @@ Open: http://localhost:3000
 * `npm run build`
 * `npm run start`
 * `npm run lint`
+
+## License
+
+This repository is source-available and proprietary.
+
+Copyright (c) 2026 Ivete de Amorim. All rights reserved.
+
+No permission is granted to use, copy, modify, redistribute, sell, or offer
+this software as a commercial service without prior written permission from the
+author. Commercial licensing is available on request via
+`iveteamorim@gmail.com`.
