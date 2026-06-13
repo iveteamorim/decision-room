@@ -1,9 +1,9 @@
-import type { Metadata, Viewport } from "next";
+﻿import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "NÓVUA Deal Room",
-  description: "AI decision support for pricing, discounts, and deal approvals.",
+  title: "NOVUA Decision Room",
+  description: "AI-assisted decision support for pricing, discounts, and commercial approvals.",
 };
 
 export const viewport: Viewport = {

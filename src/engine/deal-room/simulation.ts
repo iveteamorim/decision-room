@@ -53,7 +53,7 @@ function buildImpact(comparisons: SimulationComparison[]): SimulationImpact[] {
     {
       tone: "positive",
       label: "Margin protected",
-      value: `+EUR ${Math.round(negotiatedValue * 0.17).toLocaleString()}`,
+      value: `+EUR ${Math.round(negotiatedValue * 0.17).toLocaleString("de-DE")}`,
       note: "discounts are negotiated before margin leaks",
     },
     {

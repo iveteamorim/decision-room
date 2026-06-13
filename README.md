@@ -1,40 +1,40 @@
-# NÓVUA Deal Room
+﻿# NOVUA Decision Room
 
-**AI decision support for pricing, discounts, and deal approvals.**
+**AI-assisted decision support for pricing, discounts, and commercial approvals.**
 
-NÓVUA Deal Room is an AI-assisted decision engine for pricing, discounts, and deal approvals.
+NOVUA Decision Room is an AI-assisted decision workspace for pricing, discounts, and approval governance.
 
 It combines deterministic policies, weighted scoring, human checkpoints, explainability traces, and simulation workflows.
 
 AI supports the reasoning process, but policy and human approval remain the source of truth.
 
-NÓVUA Deal Room helps teams evaluate deals before approval by combining deal value, margin, urgency, risk, confidence, policy rules, and transparent reasoning.
+NOVUA Decision Room helps teams evaluate commercial decisions before approval by combining deal value, margin, urgency, risk, confidence, policy rules, and transparent reasoning.
 
 Live demo: https://decision-room-six.vercel.app/dashboard
 
 ## Problem
 
-Deal approvals often happen under pressure across Sales, Finance, Legal, and leadership.
+Commercial approvals often happen under pressure across Sales, Finance, Legal, and leadership.
 
-Teams need to close fast, but they also need to protect margin, avoid risky terms, and keep approval logic consistent.
+Teams need to move fast, but they also need to protect margin, avoid risky terms, and keep approval logic consistent.
 
 ## Product
 
-Deal Room prepares every deal with:
+Decision Room prepares every decision with:
 
 * Margin and pricing risk analysis
 * Policy checks before approval
 * Weighted scoring across explicit signals
 * Explainable recommendations
-* Human review for sensitive or low-confidence deals
+* Human review for sensitive or low-confidence cases
 * Simulation for pricing strategy changes
 
-The system does not approve deals autonomously. It prepares the decision, explains the trade-offs, and keeps the final approval human-controlled.
+The system does not approve deals autonomously. It prepares the decision, explains the trade-offs, and keeps final approval human-controlled.
 
 ## Core Workflow
 
-1. **Deal intake**  
-   A deal enters the workspace with structured inputs: value, margin, risk, urgency, confidence, and approval deadline.
+1. **Decision intake**  
+   A commercial request enters the workspace with structured inputs: value, margin, risk, urgency, confidence, and approval deadline.
 
 2. **Policy evaluation**  
    Hard rules protect margin thresholds, legal exposure, and high-risk approvals before score-based recommendations.
@@ -43,13 +43,13 @@ The system does not approve deals autonomously. It prepares the decision, explai
    The engine calculates an approval-readiness score from inspectable signals.
 
 4. **Recommendation**  
-   Each deal maps to one action: approve, negotiate, review, or reject.
+   Each case maps to one action: approve, negotiate, review, or reject.
 
 5. **Reasoning trace**  
    The UI explains why the recommendation was made and which policy or score threshold influenced it.
 
 6. **Simulation**  
-   Teams can test strategy changes, such as “what changes if margin matters more?”
+   Teams can test strategy changes, such as what changes if margin matters more.
 
 ## Decision Engine Architecture
 
@@ -57,16 +57,16 @@ The UI is intentionally thin. The core product logic lives under:
 
 ```txt
 src/engine/deal-room/
-├── decision-engine.ts   # Orchestrates policy, scoring, workflow, and explanation
-├── policies.ts          # Deterministic approval governance and escalation registry
-├── scoring.ts           # Deterministic + AI-assisted scoring contract
-├── workflow.ts          # Approval checkpoints, owners, blockers, and side effects
-├── explainability.ts    # Reasoning trace and auditable recommendation narrative
-├── simulation.ts        # Portfolio-level scenario simulation
-├── intake.ts            # API payload validation before engine execution
-├── fixtures.ts          # Enterprise-style deal approval examples
-├── types.ts             # Domain contracts
-└── index.ts             # Public engine API
+|-- decision-engine.ts   # Orchestrates policy, scoring, workflow, and explanation
+|-- policies.ts          # Deterministic approval governance and escalation registry
+|-- scoring.ts           # Deterministic + AI-assisted scoring contract
+|-- workflow.ts          # Approval checkpoints, owners, blockers, and side effects
+|-- explainability.ts    # Reasoning trace and auditable recommendation narrative
+|-- simulation.ts        # Portfolio-level scenario simulation
+|-- intake.ts            # API payload validation before engine execution
+|-- fixtures.ts          # Enterprise-style approval examples
+|-- types.ts             # Domain contracts
+`-- index.ts             # Public engine API
 ```
 
 ### Operating Principles
@@ -74,14 +74,14 @@ src/engine/deal-room/
 * Deterministic rules are the source of truth for policy violations.
 * AI-assisted reasoning is contextual and assistive, not autonomous approval authority.
 * Every recommendation returns policy trace, score evidence, confidence context, workflow checkpoints, and operational side effects.
-* Human checkpoints remain explicit for low-confidence, high-risk, conflicted, or policy-sensitive deals.
+* Human checkpoints remain explicit for low-confidence, high-risk, conflicted, or policy-sensitive decisions.
 * Approval chains are modeled across Sales, Finance, Legal, Ops, and Policy.
 * Simulations run through the same engine contract as live recommendations.
 
 ### Engine Flow
 
 ```txt
-Deal intake
+Decision intake
   -> deterministic policy evaluation
   -> AI-assisted context adapter
   -> weighted scoring
@@ -107,7 +107,7 @@ Compatibility adapters remain in `src/lib/*`, but new product logic should be ad
 
 This is decision support, not a chatbot wrapper.
 
-Deal Room shows how AI can support real business governance:
+Decision Room shows how AI can support real business governance:
 
 * Explainability
 * Approval traceability

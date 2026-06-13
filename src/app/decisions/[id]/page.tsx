@@ -1,42 +1,17 @@
 import Link from "next/link";
 import { decideItem, items } from "@/engine/deal-room";
-import type { ApprovalState, WorkItem } from "@/engine/deal-room";
-
-const context: Record<string, string> = {
-  "deal-1": "Enterprise discount is within margin guardrails, but the approval window is short.",
-  "deal-2": "The contract is high-value, but the requested discount puts margin below threshold.",
-  "deal-3": "The deal can close, but custom liability terms require legal review before signature.",
-  "deal-4": "Renewal uplift is profitable, low-risk, and supported by strong confidence.",
-  "deal-5": "Expansion upside is real, but the forecast confidence is too weak for automatic approval.",
-  "deal-7": "The pilot request has low value and weak margin, so approval is not justified.",
-};
-
-const paths: Record<string, string> = {
-  "deal-1": "Approve if the discount stays at 18% and standard payment terms remain unchanged.",
-  "deal-2": "Negotiate discount down or add term length before approval.",
-  "deal-3": "Route to legal and approve only after liability exposure is capped.",
-  "deal-4": "Approve renewal uplift with standard terms.",
-  "deal-5": "Request review from sales leadership before committing expansion forecast.",
-  "deal-7": "Reject current pilot terms or require a paid setup fee.",
-};
-
-function pct(value: number) {
-  return `${Math.round(value * 100)}%`;
-}
-
-function stateLabel(state: ApprovalState) {
-  if (state === "awaiting_approval") return "Awaiting approval";
-  if (state === "policy_conflict") return "Policy conflict";
-  if (state === "legal_review") return "Legal review";
-  if (state === "ready_to_send") return "Ready to send";
-  return "Terms rejected";
-}
-
-function stakeholderSummary(item: WorkItem) {
-  const positions = Array.from(new Set(item.stakeholders.map((stakeholder) => stakeholder.position)));
-  if (positions.length === 1) return "Teams are aligned on the recommended path.";
-  return `${item.stakeholders.map((stakeholder) => `${stakeholder.team}: ${stakeholder.position}`).join(" · ")}`;
-}
+import { DrNav } from "@/components/dr-nav";
+import {
+  buildPolicyChecks,
+  commandFor,
+  dealContext,
+  formatEur,
+  pct,
+  policyCheckLabel,
+  recommendedPaths,
+  stakeholderSummary,
+  stateLabel,
+} from "@/lib/decision-ui";
 
 export default async function DecisionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -45,15 +20,12 @@ export default async function DecisionPage({ params }: { params: Promise<{ id: s
   if (!item) {
     return (
       <main className="dr-page">
-        <header className="dr-nav">
-          <div><span className="dr-brand">NÓVUA DEAL ROOM</span><span className="dr-product">AI deal approval support</span></div>
-          <nav><Link href="/dashboard">Workspace</Link><Link href="/simulation">Simulation</Link></nav>
-        </header>
+        <DrNav />
         <section className="dr-hero">
           <div>
-            <p className="dr-kicker">Deal Room</p>
-            <h1>Deal not found.</h1>
-            <p>This deal is not part of the demo dataset.</p>
+            <p className="dr-kicker">Decision workspace</p>
+            <h1>Decision not found.</h1>
+            <p>This approval case is not part of the current demo dataset.</p>
           </div>
         </section>
       </main>
@@ -62,10 +34,11 @@ export default async function DecisionPage({ params }: { params: Promise<{ id: s
 
   const result = decideItem(item);
   const reason = result.policyResult?.reason ?? "This path is recommended after comparing deal value, margin, risk, urgency, and confidence.";
+  const policyChecks = buildPolicyChecks(item, result);
   const trace = [
     {
       title: "Revenue threshold",
-      body: `EUR ${item.financialImpactEur.toLocaleString()} enters the approval workflow with ${item.slaHours}h left.`,
+      body: `EUR ${formatEur(item.financialImpactEur)} enters the workflow with ${item.slaHours}h left to act.`,
     },
     {
       title: "Policy precedence",
@@ -74,7 +47,7 @@ export default async function DecisionPage({ params }: { params: Promise<{ id: s
         : "No hard policy blocks the deal, so weighted scoring controls the recommendation.",
     },
     {
-      title: "Stakeholder conflict",
+      title: "Stakeholder alignment",
       body: stakeholderSummary(item),
     },
     {
@@ -87,26 +60,17 @@ export default async function DecisionPage({ params }: { params: Promise<{ id: s
 
   return (
     <main className="dr-page">
-      <header className="dr-nav">
-        <div>
-          <span className="dr-brand">NÓVUA DEAL ROOM</span>
-          <span className="dr-product">AI deal approval support</span>
-        </div>
-        <nav>
-          <Link href="/dashboard">Workspace</Link>
-          <Link href="/simulation">Simulation</Link>
-        </nav>
-      </header>
+      <DrNav />
 
       <section className="dr-detail-hero">
         <div>
-          <p className="dr-kicker">Deal approval workspace</p>
+          <p className="dr-kicker">Approval workspace</p>
           <h1>{item.title}</h1>
-          <p>{context[item.id] ?? item.title}</p>
+          <p>{dealContext[item.id] ?? item.title}</p>
         </div>
         <div className="dr-detail-action">
-          <span>Recommended approval path</span>
-          <strong className={result.action}>{result.action}</strong>
+          <span>Recommended action</span>
+          <strong className={result.action}>{commandFor(result.action)}</strong>
         </div>
       </section>
 
@@ -131,11 +95,27 @@ export default async function DecisionPage({ params }: { params: Promise<{ id: s
 
       <section className="dr-detail-grid">
         <section className="dr-reason-card">
-          <p className="dr-kicker">Reasoning trace</p>
+          <div className="dr-panel-subhead">
+            <p>Why this decision</p>
+            <span>{result.policyResult ? result.policyResult.triggeredBy : "Weighted scoring path"}</span>
+          </div>
           <h2>{reason}</h2>
           <div className="dr-score">
             <span style={{ width: `${Math.round(result.scoreBreakdown.total * 100)}%` }} />
           </div>
+
+          <div className="dr-policy-checks dr-policy-checks-detail">
+            {policyChecks.map((check) => (
+              <div className={`dr-policy-check ${check.status}`} key={check.label}>
+                <div>
+                  <strong>{check.label}</strong>
+                  <p>{check.detail}</p>
+                </div>
+                <span>{policyCheckLabel(check.status)}</span>
+              </div>
+            ))}
+          </div>
+
           <div className="dr-trace">
             {trace.map((step, index) => (
               <div key={step.title}>
@@ -145,24 +125,30 @@ export default async function DecisionPage({ params }: { params: Promise<{ id: s
               </div>
             ))}
           </div>
+
           <div className="dr-detail-actions">
-            <button className="primary" type="button">Approve deal</button>
+            <button className="primary" type="button">Approve decision</button>
             <button type="button">Negotiate terms</button>
-            <button className="warn" type="button">Escalate to {item.owner}</button>
+            <button className="warn" type="button">Route to {item.owner}</button>
             <button type="button">Freeze terms</button>
           </div>
         </section>
 
         <aside className="dr-path-card">
           <p className="dr-kicker">Recommended path</p>
-          <blockquote>{paths[item.id] ?? "Choose the action with the clearest margin-to-risk trade-off."}</blockquote>
-          <span>Deal value: EUR {item.financialImpactEur.toLocaleString()}</span>
+          <blockquote>{recommendedPaths[item.id] ?? "Choose the action with the clearest margin-to-risk trade-off."}</blockquote>
+          <span>Deal value: EUR {formatEur(item.financialImpactEur)}</span>
+          <div className="dr-breakdown">
+            <div><span>Margin</span><strong>{pct(item.marginScore)}</strong></div>
+            <div><span>Risk</span><strong>{pct(item.riskScore)}</strong></div>
+            <div><span>Urgency</span><strong>{pct(item.urgencyScore)}</strong></div>
+          </div>
         </aside>
       </section>
 
       <section className="dr-governance-grid">
         <section className="dr-stakeholder-card">
-          <p className="dr-kicker">Multi-actor approval</p>
+          <p className="dr-kicker">Stakeholder positions</p>
           {item.stakeholders.map((stakeholder) => (
             <div key={stakeholder.team}>
               <div>
@@ -175,7 +161,10 @@ export default async function DecisionPage({ params }: { params: Promise<{ id: s
         </section>
 
         <section className="dr-audit-card">
-          <p className="dr-kicker">Operational history</p>
+          <div className="dr-panel-subhead">
+            <p>Audit trail</p>
+            <span>Operational history</span>
+          </div>
           {item.auditTrail.map((event) => (
             <div className={`dr-audit-row ${event.tone}`} key={`${event.time}-${event.event}`}>
               <span>{event.time}</span>
@@ -187,7 +176,7 @@ export default async function DecisionPage({ params }: { params: Promise<{ id: s
       </section>
 
       <section className="dr-signal-grid">
-        <div><span>Deal value</span><strong>EUR {item.valueEur.toLocaleString()}</strong></div>
+        <div><span>Deal value</span><strong>EUR {formatEur(item.valueEur)}</strong></div>
         <div><span>Margin</span><strong>{pct(item.marginScore)}</strong></div>
         <div><span>Deal risk</span><strong>{pct(item.riskScore)}</strong></div>
         <div><span>Urgency</span><strong>{pct(item.urgencyScore)}</strong></div>
