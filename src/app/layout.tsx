@@ -1,5 +1,6 @@
 ﻿import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { DealRoomProvider } from "@/components/deal-room-provider";
 
 export const metadata: Metadata = {
   title: "NOVUA Decision Room",
@@ -14,7 +15,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <DealRoomProvider>{children}</DealRoomProvider>
+      </body>
     </html>
   );
 }

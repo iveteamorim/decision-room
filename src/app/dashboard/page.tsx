@@ -2,22 +2,22 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { decideItem, items } from "@/engine/deal-room";
+import { decideItem } from "@/engine/deal-room";
 import { DrNav } from "@/components/dr-nav";
+import { useDealRoom } from "@/components/deal-room-provider";
 import {
   buildPolicyChecks,
   commandFor,
   dealContext,
   formatEur,
-  hasStakeholderConflict,
-  headlineFor,
+  pct,
   policyCheckLabel,
   reasonFor,
-  stateLabel,
 } from "@/lib/decision-ui";
 
 export default function DashboardPage() {
   const [showAllDeals, setShowAllDeals] = useState(false);
+  const { items, resetItems } = useDealRoom();
 
   const decisions = useMemo(
     () =>
@@ -25,18 +25,15 @@ export default function DashboardPage() {
         .map((item) => ({ item, result: decideItem(item) }))
         .filter((entry) => entry.item.status !== "resolved")
         .sort((a, b) => b.result.scoreBreakdown.total - a.result.scoreBreakdown.total),
-    [],
+    [items],
   );
 
   const top = decisions[0];
-  const valueAtRisk = decisions.reduce((sum, entry) => sum + entry.item.financialImpactEur, 0);
-  const reviewCount = decisions.filter((entry) => entry.result.requiresHumanReview).length;
-  const topWhy = top.result.policyResult?.reason ?? reasonFor(top.result);
-  const policyChecks = buildPolicyChecks(top.item, top.result);
   const visibleDecisions = showAllDeals ? decisions : decisions.slice(0, 3);
+  const hiddenCount = decisions.length - 3;
 
   function caseClasses(index: number, decisionRisk: (typeof decisions)[number]["item"]["decisionRisk"]) {
-    const classes = ["dr-case"];
+    const classes = ["dr-case", "dr-case-balanced"];
     if (index === 0) classes.push("selected", "critical");
     else if (index === 1) classes.push("tone-blue");
     else if (index === 2) classes.push("tone-yellow");
@@ -44,206 +41,118 @@ export default function DashboardPage() {
     return classes.join(" ");
   }
 
+  if (!top) {
+    return (
+      <main className="dr-page">
+        <DrNav active="dashboard" />
+        <article className="dr-decision-card">
+          <p className="dr-kicker">Workspace clear</p>
+          <h2 className="approve">ALL CLEAR</h2>
+          <p className="dr-decision-note">No deals waiting for human action.</p>
+          <button type="button" className="dr-queue-toggle" onClick={resetItems}>
+            Reset demo deals
+          </button>
+        </article>
+      </main>
+    );
+  }
+
+  const policyChecks = buildPolicyChecks(top.item, top.result);
+  const recentEvents = top.item.auditTrail.slice(-3);
+
   return (
     <main className="dr-page">
       <DrNav active="dashboard" />
 
-      <section className="dr-hero">
-        <div>
-          <p className="dr-kicker">AI-assisted approval workspace</p>
-          <h1>See the decision before the deal becomes a risk.</h1>
-          <p>
-            AI-assisted approval workspace for pricing, discounts, and policy-sensitive deals.
-          </p>
+      <article className="dr-decision-card">
+        <p className="dr-kicker">Recommended action</p>
+        <h2 className={top.result.action}>{commandFor(top.result.action).toUpperCase()}</h2>
+        <p className="dr-decision-title">{top.item.title}</p>
+        <div className="dr-decision-value">EUR {formatEur(top.item.financialImpactEur)}</div>
+
+        <div className="dr-decision-metrics">
+          <div><small>Margin</small><strong>{pct(top.item.marginScore)}</strong></div>
+          <div><small>Risk</small><strong>{pct(top.item.riskScore)}</strong></div>
+          <div><small>Confidence</small><strong>{pct(top.item.confidence)}</strong></div>
+          <div><small>Blockers</small><strong>{top.item.blockers.length}</strong></div>
         </div>
-        <div className="dr-metrics">
+
+        <p className="dr-decision-note">{reasonFor(top.result)}</p>
+        <Link className="dr-decision-cta" href={`/decisions/${top.item.id}`}>Open decision brief</Link>
+      </article>
+
+      <article className="dr-list-panel dr-list-panel-balanced dr-senior-queue">
+        <div className="dr-panel-head dr-panel-head-minimal">
           <div>
-            <span>Under review</span>
-            <strong>EUR {formatEur(valueAtRisk)}</strong>
+            <p>Live queue</p>
+            <h2>Ranked decisions</h2>
           </div>
-          <div>
-            <span>Deals needing action</span>
-            <strong>{reviewCount}</strong>
-          </div>
-        </div>
-      </section>
-
-      <section className="dr-critical-strip">
-        <div>
-          <p>Decision under pressure</p>
-          <h2>{top.item.title}</h2>
-          <span>
-            {topWhy} Owner: {top.item.owner}. EUR {formatEur(top.item.financialImpactEur)} exposed with a {top.item.slaHours}h deadline.
-          </span>
-        </div>
-        <Link href={`/decisions/${top.item.id}`}>Open approval plan</Link>
-      </section>
-
-      <div className="dr-dashboard-shell">
-        <div className="dr-dashboard-main">
-          <div className="dr-list-panel">
-            <div className="dr-panel-head">
-              <div>
-                <p>Deal queue</p>
-                <h2>Decisions ranked by the engine</h2>
-              </div>
-              <span>{decisions.length} active deals</span>
-            </div>
-
-            <div className="dr-case-list">
-              {visibleDecisions.map(({ item, result }, index) => (
-                <Link
-                  className={caseClasses(index, item.decisionRisk)}
-                  href={`/decisions/${item.id}`}
-                  key={item.id}
-                >
-                  <span className="dr-rank">{index + 1}</span>
-                  <div className="dr-case-body">
-                    <div className="dr-case-title">
-                      <strong>{item.title}</strong>
-                      <em className={`dr-badge ${result.action}`}>{result.action}</em>
-                    </div>
-                    <p>{dealContext[item.id] ?? item.title}</p>
-                    <div className="dr-state-row">
-                      <span>{stateLabel(item.approvalState)}</span>
-                      <span>Owner: {item.owner}</span>
-                      <span>{item.blockers.length} blockers</span>
-                      {hasStakeholderConflict(item) ? <strong>Team conflict</strong> : null}
-                    </div>
-                    <div className="dr-signals">
-                      <span>EUR {formatEur(item.financialImpactEur)}</span>
-                      <span>{Math.round(item.marginScore * 100)}% margin</span>
-                      <span>{Math.round(item.riskScore * 100)}% risk</span>
-                      <span>{item.slaHours}h deadline</span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-
-            {decisions.length > 3 ? (
-              <button
-                type="button"
-                className="dr-queue-toggle"
-                onClick={() => setShowAllDeals((open) => !open)}
-                aria-expanded={showAllDeals}
-              >
-                {showAllDeals
-                  ? "Show top 3 only"
-                  : `Show ${decisions.length - 3} more deal${decisions.length - 3 === 1 ? "" : "s"}`}
-              </button>
-            ) : null}
-          </div>
+          <span>{decisions.length} live</span>
         </div>
 
-        <aside className="dr-decision-panel">
-          <div className="dr-decision-summary">
-            <p className="dr-kicker">Recommended action</p>
-            <span className={`dr-badge ${top.result.action}`}>{top.result.action}</span>
-            <h2>{commandFor(top.result.action)}</h2>
-            <p className="dr-decision-headline">{headlineFor(top.result)}</p>
-            <div className="dr-score">
-              <span style={{ width: `${Math.round(top.result.scoreBreakdown.total * 100)}%` }} />
-            </div>
-            <div className="dr-breakdown">
-              <div><span>Deal value</span><strong>EUR {formatEur(top.item.valueEur)}</strong></div>
-              <div><span>Margin</span><strong>{Math.round(top.item.marginScore * 100)}%</strong></div>
-              <div><span>Risk</span><strong>{Math.round(top.item.riskScore * 100)}%</strong></div>
-              <div><span>Confidence</span><strong>{Math.round(top.item.confidence * 100)}%</strong></div>
-            </div>
-          </div>
-
-          <div className="dr-panel-warning">
-            <strong>Human checkpoint</strong>
-            <span>{top.result.requiresHumanReview ? `${top.item.owner} approval required` : "No manual override required"}</span>
-          </div>
-
-          <div className="dr-policy-panel">
-            <div className="dr-panel-subhead">
-              <p>Policy checks</p>
-              <span>{top.result.policyResult ? "Blocked path detected" : "Engine path is policy-safe"}</span>
-            </div>
-            <div className="dr-policy-checks">
-              {policyChecks.map((check) => (
-                <div className={`dr-policy-check ${check.status}`} key={check.label}>
-                  <div>
-                    <strong>{check.label}</strong>
-                    <p>{check.detail}</p>
-                  </div>
-                  <span>{policyCheckLabel(check.status)}</span>
+        <div className="dr-case-list">
+          {visibleDecisions.map(({ item, result }, index) => (
+            <Link className={caseClasses(index, item.decisionRisk)} href={`/decisions/${item.id}`} key={item.id}>
+              <span className="dr-rank">{index + 1}</span>
+              <div className="dr-case-body">
+                <div className="dr-case-title">
+                  <strong>{item.title}</strong>
+                  <em className={`dr-badge ${result.action}`}>{result.action}</em>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          <Link className="dr-primary" href={`/decisions/${top.item.id}`}>Open approval plan</Link>
-        </aside>
-
-        <section className="dr-dashboard-footer">
-          <section className="dr-context-row">
-          <div className="dr-context-stack">
-            <div className="dr-explain-panel">
-              <div className="dr-panel-subhead">
-                <p>Why this decision</p>
-                <span>{top.result.policyResult ? top.result.policyResult.triggeredBy : "Cross-functional conflict"}</span>
-              </div>
-              <ul>
-                <li>{topWhy}</li>
-                <li>{top.item.blockers.length ? `${top.item.blockers.length} blocker(s) remain active before commitment.` : "No open blocker is preventing execution."}</li>
-                <li>{hasStakeholderConflict(top.item) ? "Stakeholders are not fully aligned, so the recommendation preserves human review." : "Stakeholders are mostly aligned on the current path."}</li>
-              </ul>
-            </div>
-
-            <div className="dr-stakeholder-list dr-context-card">
-              <p>Stakeholder positions</p>
-              {top.item.stakeholders.map((stakeholder) => (
-                <div key={stakeholder.team}>
-                  <strong>{stakeholder.team}</strong>
-                  <span className={`dr-badge ${stakeholder.position}`}>{stakeholder.position}</span>
+                <p>{dealContext[item.id] ?? reasonFor(result)}</p>
+                <div className="dr-case-meta">
+                  <span>{item.status.replace(/_/g, " ")}</span>
+                  <span>{item.owner}</span>
+                  <span>{item.blockers.length} blocker{item.blockers.length === 1 ? "" : "s"}</span>
+                  <span>{item.slaHours}h deadline</span>
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+            </Link>
+          ))}
+        </div>
 
-          <div className="dr-audit-preview dr-context-card">
-            <div className="dr-panel-subhead">
-              <p>Audit trail</p>
-              <span>Latest events</span>
-            </div>
-            {top.item.auditTrail.slice(-3).map((event) => (
-              <div className={`dr-audit-mini ${event.tone}`} key={`${event.time}-${event.event}`}>
-                <span>{event.time}</span>
-                <strong>{event.actor}</strong>
-                <p>{event.event}</p>
+        {hiddenCount > 0 ? (
+          <button
+            type="button"
+            className="dr-queue-toggle"
+            onClick={() => setShowAllDeals((open) => !open)}
+            aria-expanded={showAllDeals}
+          >
+            {showAllDeals
+              ? "Show top 3 only"
+              : `Show ${hiddenCount} more deal${hiddenCount === 1 ? "" : "s"}`}
+          </button>
+        ) : null}
+      </article>
+
+      <section className="dr-senior-sections">
+        <article className="dr-side-card dr-analysis-card">
+          <p className="dr-kicker">Policy checks</p>
+          <div className="dr-check-list">
+            {policyChecks.map((check) => (
+              <div key={check.label} className="dr-check-row">
+                <span>{check.label} · {check.detail}</span>
+                <em className={`dr-badge ${check.status === "pass" ? "approve" : "review"}`}>
+                  {policyCheckLabel(check.status)}
+                </em>
               </div>
             ))}
           </div>
-          </section>
+        </article>
 
-          <section className="dr-capabilities">
-            <div>
-              <span>01</span>
-              <strong>Approval policies</strong>
-              <p>Hard rules protect margin, legal exposure, and approval thresholds before scoring.</p>
+        <article className="dr-side-card dr-activity-card">
+          <p className="dr-kicker">Recent activity</p>
+          {recentEvents.map((event) => (
+            <div className="dr-activity-row" key={`${event.time}-${event.actor}-${event.event}`}>
+              <div className="dr-activity-time">{event.time}</div>
+              <div>
+                <strong>{event.actor}</strong>
+                <span>{event.event}</span>
+              </div>
             </div>
-            <div>
-              <span>02</span>
-              <strong>Weighted scoring</strong>
-              <p>Deal value, margin, risk, urgency, and confidence are explicit and adjustable.</p>
-            </div>
-            <div>
-              <span>03</span>
-              <strong>Explainability</strong>
-              <p>Every recommendation exposes why a deal should be approved, negotiated, reviewed, or rejected.</p>
-            </div>
-            <div>
-              <span>04</span>
-              <strong>Human checkpoints</strong>
-              <p>Sensitive approvals stay reviewable instead of pretending full autonomy is safe.</p>
-            </div>
-          </section>
-        </section>
-      </div>
+          ))}
+        </article>
+      </section>
     </main>
   );
 }

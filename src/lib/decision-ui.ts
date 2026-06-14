@@ -76,24 +76,24 @@ export function buildPolicyChecks(item: WorkItem, result: DecisionResult) {
     {
       label: "Margin guardrail",
       status: (item.marginScore >= 0.7 ? "pass" : item.marginScore >= 0.5 ? "warning" : "blocked") as PolicyCheckStatus,
-      detail: `${pct(item.marginScore)} margin against protected threshold.`,
+      detail: `${pct(item.marginScore)} margin`,
     },
     {
       label: "Risk exposure",
       status: (item.riskScore <= 0.35 ? "pass" : item.riskScore <= 0.65 ? "warning" : "blocked") as PolicyCheckStatus,
-      detail: `${pct(item.riskScore)} delivery and commercial risk.`,
+      detail: `${pct(item.riskScore)} risk`,
     },
     {
       label: "Confidence",
       status: (item.confidence >= 0.78 ? "pass" : item.confidence >= 0.58 ? "warning" : "blocked") as PolicyCheckStatus,
-      detail: `${pct(item.confidence)} confidence in the recommendation path.`,
+      detail: `${pct(item.confidence)} confidence`,
     },
     {
       label: "Approval path",
       status: (result.requiresHumanReview || item.blockers.length ? "warning" : "pass") as PolicyCheckStatus,
       detail: item.blockers.length
-        ? `${item.owner} must clear ${item.blockers.length} blocker(s).`
-        : "No open blockers on the current approval route.",
+        ? `${item.owner} · ${item.blockers.length} blocker(s)`
+        : "Clear to proceed",
     },
   ] as const;
 }

@@ -9,7 +9,6 @@ export function DrNav({ active = "dashboard" }: DrNavProps) {
     <header className="dr-nav">
       <div>
         <span className="dr-brand">NOVUA DECISION ROOM</span>
-        <span className="dr-product">AI-assisted approval and pricing decision workspace</span>
       </div>
       <nav>
         <Link className={active === "dashboard" ? "active" : undefined} href="/dashboard">
