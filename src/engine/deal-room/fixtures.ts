@@ -1,6 +1,17 @@
 import type { WorkItem } from "./types";
 
-export const items: WorkItem[] = [
+export type SeedWorkItem = Omit<WorkItem, "deadlineAt" | "slaBreached" | "urgencyBoost">;
+
+export function materializeSeedItems(now = Date.now()): WorkItem[] {
+  return items.map((item) => ({
+    ...item,
+    deadlineAt: new Date(now + item.slaHours * 3_600_000).toISOString(),
+    slaBreached: false,
+    urgencyBoost: 0,
+  }));
+}
+
+export const items: SeedWorkItem[] = [
   {
     id: "deal-1",
     type: "discount",

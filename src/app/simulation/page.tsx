@@ -1,14 +1,14 @@
 ﻿"use client";
 
 import { useMemo, useState } from "react";
-import { items, simulateDealPortfolio } from "@/engine/deal-room";
+import { materializeSeedItems, simulateDealPortfolio } from "@/engine/deal-room";
 import { DrNav } from "@/components/dr-nav";
 import { commandFor, formatEur } from "@/lib/decision-ui";
 
 export default function SimulationPage() {
   const [showAllDeals, setShowAllDeals] = useState(false);
 
-  const simulation = useMemo(() => simulateDealPortfolio(items), []);
+  const simulation = useMemo(() => simulateDealPortfolio(materializeSeedItems()), []);
   const changedDeals = simulation.comparisons.filter((entry) => entry.change);
   const unchangedCount = simulation.comparisons.length - changedDeals.length;
   const visibleComparisons = showAllDeals ? simulation.comparisons : changedDeals;

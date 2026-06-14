@@ -1,5 +1,5 @@
-import { items, simulateDealPortfolio } from "@/engine/deal-room";
+import { materializeSeedItems, simulateDealPortfolio } from "@/engine/deal-room";
 
 export async function GET() {
-  return Response.json(simulateDealPortfolio(items));
+  return Response.json(simulateDealPortfolio(materializeSeedItems()));
 }

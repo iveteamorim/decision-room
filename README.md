@@ -12,6 +12,14 @@ NOVUA Decision Room helps teams evaluate commercial decisions before approval by
 
 Live demo: https://decision-room-six.vercel.app/dashboard
 
+## Week 1 Demo Readiness
+
+This repository includes:
+
+* `docs/DEMO_SCRIPT.md` — 15-minute live walkthrough
+* `docs/DEPLOY_CHECKLIST.md` — production demo checklist
+* optional basic-auth protection for shared demos via middleware
+
 ## Problem
 
 Commercial approvals often happen under pressure across Sales, Finance, Legal, and leadership.
@@ -119,11 +127,18 @@ Decision Room shows how AI can support real business governance:
 
 * Next.js App Router
 * TypeScript
+* Supabase (deals + deal_events persistence)
 * Policy evaluation engine
 * Weighted scoring model
 * Vercel deployment
 
 ## Local Setup
+
+1. Create a Supabase project and run `supabase/schema.sql` in the SQL Editor.
+2. Copy `.env.example` to `.env.local` and set:
+   * `NEXT_PUBLIC_SUPABASE_URL`
+   * `SUPABASE_SERVICE_ROLE_KEY`
+3. Install and start:
 
 ```bash
 npm install
@@ -131,6 +146,17 @@ npm run dev
 ```
 
 Open: http://localhost:3000
+
+On first request, the API seeds `deals` and `deal_events` from fixtures automatically.
+
+## Vercel Deploy
+
+Add the same Supabase env vars in the Vercel project settings. Optional: set `DEMO_MODE=1` to enable `/api/deals/reset?demo=1` in production demos.
+
+For password-protected demos, also set:
+
+* `DEMO_BASIC_AUTH_USER`
+* `DEMO_BASIC_AUTH_PASSWORD`
 
 ## Scripts
 

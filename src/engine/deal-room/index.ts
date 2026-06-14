@@ -1,4 +1,15 @@
-export { items } from "./fixtures";
+export { runScenarioTick, SCENARIO_BEATS } from "./scenario-player";
+export type { ScenarioBeat, ScenarioState, ScenarioTickResult } from "./scenario-player";
+export {
+  computeEffectiveUrgency,
+  computePressureStats,
+  computeRankScore,
+  formatCountdown,
+  isSlaBreached,
+} from "./urgency";
+export type { PressureStats } from "./urgency";
+export { items, materializeSeedItems } from "./fixtures";
+export type { SeedWorkItem } from "./fixtures";
 export { decideItem } from "./decision-engine";
 export { evaluatePolicies, applyPolicies, approvalPolicyRegistry } from "./policies";
 export { defaultWeights, scoreDeal, extractAiAssistedSignals } from "./scoring";

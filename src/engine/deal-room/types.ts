@@ -48,6 +48,7 @@ export interface StakeholderPosition {
 }
 
 export interface AuditEvent {
+  id?: string;
   time: string;
   actor: Team | "System";
   event: string;
@@ -64,6 +65,9 @@ export interface WorkItem {
   marginScore: number;
   confidence: number;
   slaHours: number;
+  deadlineAt: string;
+  slaBreached?: boolean;
+  urgencyBoost?: number;
   status: WorkItemStatus;
   financialImpactEur: number;
   decisionRisk: RiskLevel;
