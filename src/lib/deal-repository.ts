@@ -177,6 +177,27 @@ async function loadSnapshot() {
   };
 }
 
+function liveDeals(items: WorkItem[]) {
+  return items.filter((item) => item.status !== "resolved");
+}
+
+function needsDemoReseed(items: WorkItem[]) {
+  const live = liveDeals(items);
+  if (live.length === 0) return true;
+  if (live.length === 1 && live[0].id === "deal-7") return true;
+  return false;
+}
+
+async function loadViableSnapshot() {
+  await ensureSeeded();
+  let snapshot = await loadSnapshot();
+  if (needsDemoReseed(snapshot.items)) {
+    await seedFromFixtures();
+    snapshot = await loadSnapshot();
+  }
+  return snapshot;
+}
+
 export async function seedFromFixtures(now = Date.now()) {
   const supabase = getSupabaseAdmin();
   const items = materializeSeedItems(now);
@@ -222,8 +243,7 @@ export async function ensureSeeded() {
 }
 
 export async function getDealStoreSnapshot() {
-  await ensureSeeded();
-  const snapshot = await loadSnapshot();
+  const snapshot = await loadViableSnapshot();
   return {
     items: snapshot.items,
     pressure: computePressureStats(snapshot.items),
@@ -232,14 +252,12 @@ export async function getDealStoreSnapshot() {
 }
 
 export async function getDealById(id: string) {
-  await ensureSeeded();
-  const snapshot = await loadSnapshot();
+  const snapshot = await loadViableSnapshot();
   return snapshot.items.find((item) => item.id === id);
 }
 
 export async function applyDealAction(id: string, action: HumanAction) {
-  await ensureSeeded();
-  const snapshot = await loadSnapshot();
+  const snapshot = await loadViableSnapshot();
   const item = snapshot.items.find((entry) => entry.id === id);
   if (!item) return null;
 
@@ -276,8 +294,7 @@ function beatIdForEvent(dealId: string, message: string, appliedBeatIds: string[
 }
 
 export async function tickDealStore() {
-  await ensureSeeded();
-  const snapshot = await loadSnapshot();
+  const snapshot = await loadViableSnapshot();
   const tick = runScenarioTick(snapshot.items, {
     sessionStartedAt: snapshot.sessionStartedAt,
     appliedBeatIds: snapshot.appliedBeatIds,
