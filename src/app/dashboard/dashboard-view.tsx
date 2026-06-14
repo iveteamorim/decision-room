@@ -70,7 +70,7 @@ export function DashboardView() {
         <DrNav active="dashboard" />
         <article className="dr-decision-card">
           <p className="dr-kicker">Loading workspace</p>
-          <p className="dr-decision-note">Syncing live deal queue…</p>
+          <p className="dr-decision-note">Syncing live deal queue...</p>
         </article>
       </main>
     );
@@ -81,8 +81,8 @@ export function DashboardView() {
       <main className="dr-page">
         <DrNav active="dashboard" />
         <article className="dr-decision-card">
-          <p className="dr-kicker">Store unavailable</p>
-          <h2 className="review">CONNECTION REQUIRED</h2>
+          <p className="dr-kicker">Workspace unavailable</p>
+          <h2 className="review">Connection required</h2>
           <p className="dr-decision-note">{loadError}</p>
         </article>
       </main>
@@ -94,9 +94,9 @@ export function DashboardView() {
       <main className="dr-page">
         <DrNav active="dashboard" />
         <article className="dr-decision-card">
-          <p className="dr-kicker">Workspace clear</p>
+          <p className="dr-kicker">Queue clear</p>
           <h2 className="approve">ALL CLEAR</h2>
-          <p className="dr-decision-note">No deals waiting for human action.</p>
+          <p className="dr-decision-note">No open decisions requiring human action.</p>
           {demoMode ? (
             <button type="button" className="dr-queue-toggle" onClick={() => resetItems()}>
               Reset demo deals
@@ -122,7 +122,7 @@ export function DashboardView() {
       ) : null}
 
       <article className="dr-decision-card">
-        <p className="dr-kicker">Recommended action</p>
+        <p className="dr-kicker">Priority decision</p>
         <h2 className={top.result.action}>{commandFor(top.result.action).toUpperCase()}</h2>
         <p className="dr-decision-title">{top.item.title}</p>
         <div className="dr-decision-value">EUR {formatEur(top.item.financialImpactEur)}</div>
@@ -135,7 +135,7 @@ export function DashboardView() {
         </div>
 
         <p className="dr-decision-note">{reasonFor(top.result)}</p>
-        <Link className="dr-decision-cta" href={`/decisions/${top.item.id}`}>Open decision brief</Link>
+        <Link className="dr-decision-cta" href={`/decisions/${top.item.id}`}>Review decision</Link>
       </article>
 
       <article className="dr-list-panel dr-list-panel-balanced dr-senior-queue">
@@ -197,7 +197,7 @@ export function DashboardView() {
           <div className="dr-check-list">
             {policyChecks.map((check) => (
               <div key={check.label} className="dr-check-row">
-                <span>{check.label} · {check.detail}</span>
+                <span>{check.label} | {check.detail}</span>
                 <em className={`dr-badge ${check.status === "pass" ? "approve" : "review"}`}>
                   {policyCheckLabel(check.status)}
                 </em>

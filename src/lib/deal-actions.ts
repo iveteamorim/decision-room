@@ -154,7 +154,7 @@ export function applyHumanAction(item: WorkItem, action: HumanAction): WorkItem 
 }
 
 export function actionFeedback(action: HumanAction, owner: Team) {
-  if (action === "approve") return "Approval recorded. Deal removed from the live queue.";
+  if (action === "approve") return "Decision recorded and removed from the active queue.";
   if (action === "negotiate") return "Deal returned to sales with updated negotiation status.";
   return `Deal routed to ${owner} and marked in review.`;
 }

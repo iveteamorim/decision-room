@@ -6,7 +6,7 @@ function DashboardFallback() {
     <main className="dr-page">
       <article className="dr-decision-card">
         <p className="dr-kicker">Loading workspace</p>
-        <p className="dr-decision-note">Syncing live deal queue…</p>
+        <p className="dr-decision-note">Syncing live deal queue...</p>
       </article>
     </main>
   );

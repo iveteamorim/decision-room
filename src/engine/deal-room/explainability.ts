@@ -15,7 +15,7 @@ export function buildRationale(
   workflow: WorkflowPlan,
 ) {
   return [
-    `Recommended action: ${action}`,
+    `Recommendation: ${action}`,
     `Composite score: ${scoring.breakdown.total.toFixed(2)}`,
     `Confidence: ${item.confidence.toFixed(2)}`,
     `AI-assisted flags: ${scoring.aiAssistedSignal.flags.join(", ")}`,
@@ -70,7 +70,7 @@ export function buildExplanation(
     },
     {
       title: "Stakeholder positions",
-      body: item.stakeholders.map((stakeholder) => `${stakeholder.team}: ${stakeholder.position}`).join(" · "),
+      body: item.stakeholders.map((stakeholder) => `${stakeholder.team}: ${stakeholder.position}`).join(" | "),
       source: "stakeholder",
     },
   ];

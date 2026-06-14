@@ -49,7 +49,7 @@ export function DecisionBrief({ id }: { id: string }) {
       <main className="dr-page">
         <DrNav />
         <section className="dr-hero dr-hero-compact">
-          <h1>Loading decision brief…</h1>
+          <h1>Loading decision brief...</h1>
         </section>
       </main>
     );
@@ -104,7 +104,7 @@ export function DecisionBrief({ id }: { id: string }) {
 
       <section className="dr-operational-grid dr-operational-grid-compact">
         <div>
-          <span>State</span>
+          <span>Status</span>
           <strong>{stateLabel(item.approvalState)}</strong>
         </div>
         <div>
@@ -118,7 +118,7 @@ export function DecisionBrief({ id }: { id: string }) {
           </strong>
         </div>
         <div className="dr-ops-highlight">
-          <span>Action</span>
+          <span>Recommendation</span>
           <strong className={`dr-detail-action-badge ${displayAction}`}>{commandFor(displayAction)}</strong>
           <em>EUR {formatEur(item.financialImpactEur)}</em>
         </div>
@@ -133,7 +133,7 @@ export function DecisionBrief({ id }: { id: string }) {
           <div className="dr-resolution-banner">
             <div>
               <span>Resolved</span>
-              <strong>Approval recorded and removed from the live queue.</strong>
+              <strong>Decision recorded and removed from the active queue.</strong>
             </div>
             <Link href="/dashboard">Return to workspace</Link>
           </div>
@@ -141,7 +141,7 @@ export function DecisionBrief({ id }: { id: string }) {
 
         <div className="dr-stakeholder-card dr-stakeholder-card-compact">
           <div className="dr-panel-head dr-panel-head-minimal">
-            <h2>Stakeholders</h2>
+            <h2>Stakeholder positions</h2>
           </div>
           {item.stakeholders.map((stakeholder) => (
             <div className="dr-stakeholder-row" key={stakeholder.team}>
@@ -153,7 +153,7 @@ export function DecisionBrief({ id }: { id: string }) {
 
         {!resolved && actionOptions.length > 0 ? (
           <div className="dr-detail-actions dr-detail-actions-compact">
-            <p className="dr-action-prompt">Choose next step for this deal</p>
+            <p className="dr-action-prompt">Next action</p>
             {actionOptions.map((option) => (
               <button
                 key={option.action}
@@ -162,7 +162,7 @@ export function DecisionBrief({ id }: { id: string }) {
                 disabled={pending !== null}
                 onClick={() => handleAction(option.action)}
               >
-                {pending === option.action ? "Recording…" : option.label}
+                {pending === option.action ? "Recording..." : option.label}
               </button>
             ))}
             <a className="dr-export-link" href={`/api/audit/${item.id}`} download={`${item.id}-audit.json`}>
@@ -173,7 +173,7 @@ export function DecisionBrief({ id }: { id: string }) {
 
         {!resolved && actionOptions.length === 0 ? (
           <div className="dr-detail-actions dr-detail-actions-compact">
-            <p className="dr-action-prompt">No further actions available for this deal state.</p>
+            <p className="dr-action-prompt">No further actions available.</p>
             <a className="dr-export-link" href={`/api/audit/${item.id}`} download={`${item.id}-audit.json`}>
               Export audit packet
             </a>

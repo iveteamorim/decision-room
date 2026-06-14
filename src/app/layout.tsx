@@ -4,7 +4,7 @@ import { DealRoomProvider } from "@/components/deal-room-provider";
 
 export const metadata: Metadata = {
   title: "NOVUA Decision Room",
-  description: "AI-assisted decision support for pricing, discounts, and commercial approvals.",
+  description: "Decision workspace for pricing, discount, and approval governance.",
 };
 
 export const viewport: Viewport = {

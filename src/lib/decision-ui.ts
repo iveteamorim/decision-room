@@ -92,7 +92,7 @@ export function buildPolicyChecks(item: WorkItem, result: DecisionResult) {
       label: "Approval path",
       status: (result.requiresHumanReview || item.blockers.length ? "warning" : "pass") as PolicyCheckStatus,
       detail: item.blockers.length
-        ? `${item.owner} · ${item.blockers.length} blocker(s)`
+        ? `${item.owner} | ${item.blockers.length} blocker(s)`
         : "Clear to proceed",
     },
   ] as const;

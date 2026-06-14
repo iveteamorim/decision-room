@@ -18,14 +18,14 @@ export default function SimulationPage() {
       <DrNav active="simulation" />
 
       <section className="dr-hero dr-hero-compact">
-        <h1>Margin-first scenario</h1>
+        <h1>Scenario analysis</h1>
         <div className="dr-metrics dr-metrics-compact">
           <div>
-            <span>Shifts</span>
+            <span>Decision shifts</span>
             <strong>{simulation.changedCount}</strong>
           </div>
           <div>
-            <span>Margin protected</span>
+            <span>Protected margin</span>
             <strong>{simulation.impact[0].value}</strong>
           </div>
         </div>
@@ -54,7 +54,7 @@ export default function SimulationPage() {
 
         <div className="dr-list-panel">
           <div className="dr-panel-head dr-panel-head-minimal">
-            <h2>{showAllDeals ? "All deals" : "Deals that shift"}</h2>
+            <h2>{showAllDeals ? "All deals" : "Changed decisions"}</h2>
             <span>{simulation.comparisons.length} deals</span>
           </div>
 
@@ -85,7 +85,7 @@ export default function SimulationPage() {
                     </div>
                   </div>
                 ) : (
-                  <p className="dr-sim-unchanged">No shift</p>
+                  <p className="dr-sim-unchanged">No change</p>
                 )}
               </div>
             ))}
