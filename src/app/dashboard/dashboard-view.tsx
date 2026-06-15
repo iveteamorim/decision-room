@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { decideItem } from "@/engine/deal-room";
-import { computeRankScore, formatCountdown, isSlaBreached } from "@/engine/deal-room/urgency";
+import { computePressureStats, computeRankScore, formatCountdown, isSlaBreached } from "@/engine/deal-room/urgency";
 import { DrNav } from "@/components/dr-nav";
 import { useDealRoom } from "@/components/deal-room-provider";
 import { useViewerRole } from "@/components/viewer-role-provider";
@@ -25,7 +25,7 @@ export function DashboardView() {
   const demoMode = searchParams.get("demo") === "1";
   const [showAllDeals, setShowAllDeals] = useState(false);
   const [now, setNow] = useState(() => Date.now());
-  const { items, pressure, resetItems, ready, loadError } = useDealRoom();
+  const { items, resetItems, ready, loadError } = useDealRoom();
   const { role } = useViewerRole();
 
   useEffect(() => {
@@ -34,6 +34,8 @@ export function DashboardView() {
   }, []);
 
   const roleItems = useMemo(() => filterDealsForRole(items, role), [items, role]);
+
+  const rolePressure = useMemo(() => computePressureStats(roleItems, now), [roleItems, now]);
 
   const decisions = useMemo(
     () =>
@@ -127,11 +129,11 @@ export function DashboardView() {
 
       <p className="dr-role-note">{roleWorkspaceNote(role)}</p>
 
-      {pressure && pressure.liveCount > 0 ? (
+      {rolePressure.liveCount > 0 ? (
         <section className="dr-pressure-strip" aria-label="Operational pressure">
-          <span>EUR {formatEur(pressure.eurAtRisk)} at risk</span>
-          <span>{pressure.breaches} SLA breach{pressure.breaches === 1 ? "" : "es"}</span>
-          <span>{pressure.needsAction} need action</span>
+          <span>EUR {formatEur(rolePressure.eurAtRisk)} at risk</span>
+          <span>{rolePressure.breaches} SLA breach{rolePressure.breaches === 1 ? "" : "es"}</span>
+          <span>{rolePressure.needsAction} need action</span>
         </section>
       ) : null}
 
