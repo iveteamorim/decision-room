@@ -7,9 +7,9 @@ import { decideItem } from "@/engine/deal-room";
 import { formatCountdown, isSlaBreached } from "@/engine/deal-room/urgency";
 import { DrNav } from "@/components/dr-nav";
 import { useDealRoom } from "@/components/deal-room-provider";
+import { useViewerRole } from "@/components/viewer-role-provider";
 import {
   actionFeedback,
-  getHumanActionOptions,
   type HumanAction,
   type HumanActionVariant,
 } from "@/lib/deal-actions";
@@ -19,6 +19,12 @@ import {
   reasonFor,
   stateLabel,
 } from "@/lib/decision-ui";
+import {
+  canActOnDeal,
+  getRoleActionOptions,
+  isDealVisibleForRole,
+  roleWorkspaceNote,
+} from "@/lib/viewer-role";
 
 function actionButtonClass(variant: HumanActionVariant) {
   if (variant === "primary") return "primary";
@@ -29,6 +35,7 @@ function actionButtonClass(variant: HumanActionVariant) {
 export function DecisionBrief({ id }: { id: string }) {
   const router = useRouter();
   const { getItem, runAction, ready } = useDealRoom();
+  const { role } = useViewerRole();
   const item = getItem(id);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [pending, setPending] = useState<HumanAction | null>(null);
@@ -66,11 +73,28 @@ export function DecisionBrief({ id }: { id: string }) {
     );
   }
 
+  if (!isDealVisibleForRole(item, role)) {
+    return (
+      <main className="dr-page">
+        <DrNav />
+        <p className="dr-role-note">{roleWorkspaceNote(role)}</p>
+        <section className="dr-hero dr-hero-compact">
+          <h1>Not in {role} queue</h1>
+          <p className="dr-decision-note">
+            This decision is routed outside the current {role} view. Switch to Finance for the full workspace or choose another deal from the queue.
+          </p>
+          <Link className="dr-decision-cta" href="/dashboard">Back to workspace</Link>
+        </section>
+      </main>
+    );
+  }
+
   const result = decideItem(item);
   const reason = result.policyResult?.reason ?? reasonFor(result);
   const displayAction = item.status === "resolved" ? "approve" : result.action;
   const resolved = item.status === "resolved";
-  const actionOptions = getHumanActionOptions(item);
+  const actionOptions = getRoleActionOptions(item, role);
+  const readOnly = !canActOnDeal(item, role);
   const recentEvents = [...item.auditTrail].slice(-4).reverse();
   const breached = isSlaBreached(item, now) || Boolean(item.slaBreached);
 
@@ -97,6 +121,8 @@ export function DecisionBrief({ id }: { id: string }) {
       <p className="dr-back-link">
         <Link href="/dashboard">Back to workspace</Link>
       </p>
+
+      <p className="dr-role-note">{roleWorkspaceNote(role)}</p>
 
       <section className="dr-detail-hero dr-detail-hero-compact">
         <h1>{item.title}</h1>
@@ -150,6 +176,15 @@ export function DecisionBrief({ id }: { id: string }) {
             </div>
           ))}
         </div>
+
+        {!resolved && readOnly ? (
+          <div className="dr-detail-actions dr-detail-actions-compact">
+            <p className="dr-action-prompt">Read-only in {role} view — owner is {item.owner}.</p>
+            <a className="dr-export-link" href={`/api/audit/${item.id}`} download={`${item.id}-audit.json`}>
+              Export audit packet
+            </a>
+          </div>
+        ) : null}
 
         {!resolved && actionOptions.length > 0 ? (
           <div className="dr-detail-actions dr-detail-actions-compact">

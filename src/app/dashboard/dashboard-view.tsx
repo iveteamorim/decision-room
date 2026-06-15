@@ -7,6 +7,8 @@ import { decideItem } from "@/engine/deal-room";
 import { computeRankScore, formatCountdown, isSlaBreached } from "@/engine/deal-room/urgency";
 import { DrNav } from "@/components/dr-nav";
 import { useDealRoom } from "@/components/deal-room-provider";
+import { useViewerRole } from "@/components/viewer-role-provider";
+import { countLiveAuditEntries } from "@/lib/queue-ranking";
 import {
   buildPolicyChecks,
   commandFor,
@@ -16,6 +18,7 @@ import {
   policyCheckLabel,
   reasonFor,
 } from "@/lib/decision-ui";
+import { filterDealsForRole, roleWorkspaceNote } from "@/lib/viewer-role";
 
 export function DashboardView() {
   const searchParams = useSearchParams();
@@ -23,15 +26,18 @@ export function DashboardView() {
   const [showAllDeals, setShowAllDeals] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const { items, pressure, resetItems, ready, loadError } = useDealRoom();
+  const { role } = useViewerRole();
 
   useEffect(() => {
     const interval = window.setInterval(() => setNow(Date.now()), 30_000);
     return () => window.clearInterval(interval);
   }, []);
 
+  const roleItems = useMemo(() => filterDealsForRole(items, role), [items, role]);
+
   const decisions = useMemo(
     () =>
-      items
+      roleItems
         .map((item) => ({ item, result: decideItem(item) }))
         .filter((entry) => entry.item.status !== "resolved")
         .sort(
@@ -39,19 +45,20 @@ export function DashboardView() {
             computeRankScore(b.item, b.result.scoreBreakdown.total, now) -
             computeRankScore(a.item, a.result.scoreBreakdown.total, now),
         ),
-    [items, now],
+    [roleItems, now],
   );
 
   const top = decisions[0];
   const visibleDecisions = showAllDeals ? decisions : decisions.slice(0, 3);
   const hiddenCount = decisions.length - 3;
+  const auditEntryCount = useMemo(() => countLiveAuditEntries(roleItems), [roleItems]);
   const recentEvents = useMemo(
     () =>
-      items
+      roleItems
         .filter((entry) => entry.status !== "resolved")
         .flatMap((entry) => entry.auditTrail.map((event) => ({ ...event, dealId: entry.id })))
         .slice(-4),
-    [items],
+    [roleItems],
   );
 
   function caseClasses(index: number, decisionRisk: (typeof decisions)[number]["item"]["decisionRisk"], breached: boolean) {
@@ -93,10 +100,15 @@ export function DashboardView() {
     return (
       <main className="dr-page">
         <DrNav active="dashboard" />
+        <p className="dr-role-note">{roleWorkspaceNote(role)}</p>
         <article className="dr-decision-card">
           <p className="dr-kicker">Queue clear</p>
           <h2 className="approve">ALL CLEAR</h2>
-          <p className="dr-decision-note">No open decisions requiring human action.</p>
+          <p className="dr-decision-note">
+            {role === "Finance"
+              ? "No open decisions requiring human action."
+              : `No decisions in the ${role} queue right now. Switch to Finance for the full workspace.`}
+          </p>
           {demoMode ? (
             <button type="button" className="dr-queue-toggle" onClick={() => resetItems()}>
               Reset demo deals
@@ -112,6 +124,8 @@ export function DashboardView() {
   return (
     <main className="dr-page">
       <DrNav active="dashboard" />
+
+      <p className="dr-role-note">{roleWorkspaceNote(role)}</p>
 
       {pressure && pressure.liveCount > 0 ? (
         <section className="dr-pressure-strip" aria-label="Operational pressure">
@@ -206,10 +220,22 @@ export function DashboardView() {
           </div>
         </article>
 
-        <article className="dr-side-card dr-activity-card">
-          <p className="dr-kicker">Recent activity</p>
+        <article className="dr-side-card dr-trail-card">
+          <div className="dr-panel-head dr-panel-head-minimal dr-trail-head">
+            <div>
+              <p className="dr-kicker">Decision trail</p>
+              <h2>{auditEntryCount} audit entries</h2>
+            </div>
+            <a
+              className="dr-export-link dr-export-link-inline"
+              href={`/api/audit/${top.item.id}`}
+              download={`${top.item.id}-audit.json`}
+            >
+              Export audit packet
+            </a>
+          </div>
           {recentEvents.map((event) => (
-            <div className="dr-activity-row" key={`${event.time}-${event.actor}-${event.event}`}>
+            <div className="dr-activity-row" key={`${event.dealId}-${event.time}-${event.actor}-${event.event}`}>
               <div className="dr-activity-time">{event.time}</div>
               <div>
                 <strong>{event.actor}</strong>

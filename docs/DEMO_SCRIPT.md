@@ -1,126 +1,141 @@
 # NOVUA Decision Room — 15-Minute Demo Script
 
-Use this flow for live demos, pilot calls, and recruiter walkthroughs. The goal is to show operational pressure, explainability, and human-controlled action without improvising.
+Use this flow for live demos, pilot calls, and recruiter walkthroughs. The story is fixed: **Acme 18% enterprise rollout (deal-1)** under SLA pressure on a Tuesday afternoon.
 
 ## Demo Setup
 
-1. Open `/dashboard`.
-2. Make sure demo auth is enabled in production if sharing the live link.
-3. If you need a clean state, use the demo reset path before the call.
-4. Keep `/decisions/deal-1` and `/simulation` ready in separate tabs.
+1. Open `https://decision-room-six.vercel.app/dashboard` (or local `/dashboard`).
+2. Confirm **deal-1** is `#1` in the queue. If the queue looks burned, open `/dashboard?demo=1` and click **Reset demo deals**, or reload — auto-reseed restores the scenario when needed.
+3. Keep `/decisions/deal-1` and `/simulation` in separate tabs.
+4. Optional: enable basic auth in production before sharing the link.
 
-## 1. Opening Narrative — 60 seconds
+## 1. Opening — 60 seconds
 
 Say:
 
-> Commercial approvals often happen under pressure across Sales, Finance, and Policy. Decision Room prepares each deal with policy checks, weighted scoring, reasoning traces, and explicit human checkpoints so teams can move fast without losing control.
+> Commercial approvals happen under pressure across Sales, Finance, and Legal. Decision Room ranks what needs human attention first, explains why, and keeps every action auditable. AI assists — humans stay in control.
 
 What to show:
 
-- `Under review`
-- `Needs action`
-- `Policy-blocked`
-- `Team conflicts`
+- **Priority decision** card (deal-1, REVIEW)
+- **Pressure strip** — EUR at risk, SLA breaches, need action
+- **Role switcher** in the nav — Finance / Sales / Legal / Policy
 
 Point:
 
 - This is not a chatbot.
-- It is a decision workspace with governed next steps.
+- It is an operational approval workspace with governed next steps.
 
-## 2. Live Queue — 3 minutes
+## 2. Role Views — 2 minutes
+
+Switch roles in the nav:
+
+| Role | What changes |
+|------|----------------|
+| **Finance** | Full queue — flagship view |
+| **Sales** | Legal-only deals drop out (e.g. liability clause) |
+| **Legal** | Contract / liability decisions only |
+| **Policy** | Margin conflicts and rule exceptions |
+
+Say:
+
+> The same backend, different operator context — like real enterprise permissions without a separate product.
+
+## 3. Live Queue — 2 minutes
 
 Scroll the ranked queue.
 
 Call out:
 
-- deals are ranked by urgency, risk, and policy pressure
-- deadlines are live
-- actions are not static; they depend on deal state
+- live **deadline countdown**
+- rank changes as urgency increases
+- owner, blockers, and recommended action per deal
 
-Recommended line:
+Line:
 
-> The queue is designed to answer a practical question: what needs human attention first, and why?
+> The queue answers one question: what needs human attention first, and why?
 
-Open `deal-1`.
+Open **deal-1** → **Review decision**.
 
-## 3. Decision Brief — 4 minutes
+## 4. Decision Brief — 4 minutes
 
-Explain the brief in this order:
+Walk in this order:
 
-1. `State`
-2. `Owner`
-3. `Deadline`
-4. `Action`
+1. **Status**
+2. **Owner**
+3. **Deadline**
+4. **Recommendation**
 
 Then show:
 
-- stakeholder positions
-- recent activity
-- valid next actions only
+- **Stakeholder positions**
+- **Next action** (only valid actions for this deal state)
+- **Recent activity**
 
-Recommended line:
+Line:
 
-> The system does not approve the deal autonomously. It prepares the recommendation, shows the blockers, and keeps the approval path human-controlled.
+> The system does not approve autonomously. It prepares the recommendation, surfaces blockers, and records the human decision.
 
-If useful, click one valid action and return to the workspace to show that the queue persists and updates.
+Perform one valid action (e.g. **Route to Finance** or **Approve and close** as Finance). Return to the workspace — the queue persists and updates.
 
-## 4. Auditability — 2 minutes
+## 5. Decision Trail & Audit — 2 minutes
+
+Back on the dashboard, open the **Decision trail** panel.
 
 Show:
 
-- recent activity in the brief
-- `Export audit packet`
+- audit entry count
+- recent live events
+- **Export audit packet** (JSON download)
 
-Explain:
-
-- every meaningful action leaves an auditable trail
-- the point is traceability, not just recommendation
-
-Recommended line:
+Line:
 
 > If someone asks why a deal was routed, delayed, or approved, the workspace already contains the answer.
 
-## 5. Pressure & Time — 2 minutes
+## 6. Live Pressure — 2 minutes
 
-Back on the dashboard, point out:
+Wait for or explain the live tick (every 60s in prod):
 
-- live deadline countdown
-- changing priority
-- pressure strip
+- toast: **Priority changed** or new operational signal
+- SLA countdown moving
+- pressure strip updating
 
-Recommended line:
+Line:
 
-> This is where the product shifts from static demo to operational behavior. The workspace remembers state, deadlines keep moving, and the queue reorders as pressure changes.
+> The workspace remembers state. Deadlines move, signals arrive, and the queue reorders — it is not a static snapshot.
 
-## 6. Simulation — 2 minutes
+## 7. Simulation — 2 minutes
 
 Open `/simulation`.
 
 Explain:
 
-- teams can test weighting changes before changing policy
-- simulation is for strategy discussion, not autonomous execution
+- **Scenario analysis** — test weight changes before changing live policy
+- **Decision shifts** — compare baseline vs margin-first profile
 
-Recommended line:
+Line:
 
-> Simulation helps leadership test governance choices before pushing them into the live approval flow.
+> Simulation is for strategy discussion, not autonomous execution.
 
-## 7. Close — 1 minute
+## 8. Close — 1 minute
 
 Say:
 
-> Decision Room is best positioned today as an AI-assisted commercial decision workspace for pilots, approval governance experiments, and design-partner conversations. It is already strong for demos and pilot discussions, and the roadmap to enterprise hardening is clear.
+> Decision Room is a live B2B decision workspace for commercial approvals — ranked queue, policy checks, human sign-off, and audit trail. It is ready for pilot conversations and design-partner evaluation today.
 
-## If You Only Have 5 Minutes
+## 5-Minute Version
 
-Show only:
+1. Dashboard — priority card + pressure strip + role switch
+2. deal-1 brief — recommendation + export audit
+3. One sentence on simulation
 
-1. Dashboard queue
-2. One deal brief
-3. Audit export
+## If Asked “Where Is the AI?”
 
-## If You Get Asked “Where is the AI?”
+> Deterministic policies and scoring are the source of truth. AI assists context and reasoning, but approval authority stays human and auditable. That is intentional for real commercial governance.
 
-Answer:
+## Demo Roles Cheat Sheet
 
-> Today the product combines deterministic policies, explicit scoring, and an AI-assisted reasoning layer. Policy and human approval remain the source of truth. That makes it safer, more explainable, and easier to deploy in real approval workflows.
+- **Finance** — approve deal-1, show full queue
+- **Sales** — show slimmer queue, read-only on Finance-owned deals
+- **Legal** — open deal-3 liability story
+- **Policy** — open deal-2 margin conflict

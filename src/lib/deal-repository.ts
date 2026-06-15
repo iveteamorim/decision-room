@@ -3,6 +3,7 @@ import { SCENARIO_BEATS, runScenarioTick } from "@/engine/deal-room/scenario-pla
 import type { AuditEvent, Team, WorkItem } from "@/engine/deal-room/types";
 import { computePressureStats } from "@/engine/deal-room/urgency";
 import { applyHumanAction, isValidHumanAction, type HumanAction } from "@/lib/deal-actions";
+import { getTopRankedDeal } from "@/lib/queue-ranking";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 const WORKSPACE_ID = "default";
@@ -293,15 +294,23 @@ function beatIdForEvent(dealId: string, message: string, appliedBeatIds: string[
   });
 }
 
+function scenarioNotice(newEventIds: string[]) {
+  const latest = newEventIds[newEventIds.length - 1];
+  if (!latest) return null;
+  const beat = SCENARIO_BEATS.find((entry) => entry.id === latest);
+  return beat?.audit.event ?? null;
+}
+
 export async function tickDealStore() {
   const snapshot = await loadViableSnapshot();
+  const now = Date.now();
+  const beforeTop = getTopRankedDeal(snapshot.items, now);
   const tick = runScenarioTick(snapshot.items, {
     sessionStartedAt: snapshot.sessionStartedAt,
     appliedBeatIds: snapshot.appliedBeatIds,
   });
 
   const supabase = getSupabaseAdmin();
-  const now = Date.now();
   let eventOffset = 0;
 
   for (const after of tick.items) {
@@ -343,10 +352,15 @@ export async function tickDealStore() {
     .eq("id", WORKSPACE_ID);
   if (workspaceError) throw workspaceError;
 
+  const afterTop = getTopRankedDeal(tick.items, now);
+
   return {
     items: tick.items,
     newEvents: tick.newEvents,
     pressure: computePressureStats(tick.items),
+    priorityChanged: Boolean(beforeTop && afterTop && beforeTop.id !== afterTop.id),
+    topDealTitle: afterTop?.title ?? null,
+    scenarioMessage: scenarioNotice(tick.newEvents),
   };
 }
 

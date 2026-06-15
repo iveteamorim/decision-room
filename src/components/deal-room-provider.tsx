@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { PressureStats, WorkItem } from "@/engine/deal-room";
 import type { HumanAction } from "@/lib/deal-actions";
 
@@ -9,6 +9,8 @@ type DealRoomContextValue = {
   pressure: PressureStats | null;
   ready: boolean;
   loadError: string | null;
+  notice: string | null;
+  dismissNotice: () => void;
   getItem: (id: string) => WorkItem | undefined;
   runAction: (id: string, action: HumanAction) => Promise<void>;
   resetItems: () => Promise<void>;
@@ -33,11 +35,47 @@ async function fetchDeals() {
   return response.json() as Promise<{ items: WorkItem[]; pressure: PressureStats }>;
 }
 
+interface TickResponse {
+  newEvents?: string[];
+  priorityChanged?: boolean;
+  topDealTitle?: string | null;
+  scenarioMessage?: string | null;
+}
+
+function buildTickNotice(tick: TickResponse) {
+  if (tick.priorityChanged && tick.topDealTitle) {
+    return `Priority changed — ${tick.topDealTitle} is now #1.`;
+  }
+  if (tick.scenarioMessage) return tick.scenarioMessage;
+  if (tick.newEvents?.length) return "Live queue updated — new operational signal received.";
+  return null;
+}
+
 export function DealRoomProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<WorkItem[]>([]);
   const [pressure, setPressure] = useState<PressureStats | null>(null);
   const [ready, setReady] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const noticeTimer = useRef<number | null>(null);
+
+  const dismissNotice = useCallback(() => {
+    setNotice(null);
+    if (noticeTimer.current) {
+      window.clearTimeout(noticeTimer.current);
+      noticeTimer.current = null;
+    }
+  }, []);
+
+  const showNotice = useCallback(
+    (message: string | null) => {
+      if (!message) return;
+      setNotice(message);
+      if (noticeTimer.current) window.clearTimeout(noticeTimer.current);
+      noticeTimer.current = window.setTimeout(() => setNotice(null), 7000);
+    },
+    [],
+  );
 
   const refresh = useCallback(async () => {
     const snapshot = await fetchDeals();
@@ -45,6 +83,19 @@ export function DealRoomProvider({ children }: { children: React.ReactNode }) {
     setPressure(snapshot.pressure);
     setLoadError(null);
   }, []);
+
+  const runTick = useCallback(
+    async (silent = false) => {
+      const response = await fetch("/api/deals/tick", { method: "POST" });
+      if (!response.ok) return;
+      const tick = (await response.json()) as TickResponse;
+      await refresh();
+      if (!silent) {
+        showNotice(buildTickNotice(tick));
+      }
+    },
+    [refresh, showNotice],
+  );
 
   useEffect(() => {
     let active = true;
@@ -72,16 +123,11 @@ export function DealRoomProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!ready) return;
-    const interval = window.setInterval(async () => {
-      try {
-        await fetch("/api/deals/tick", { method: "POST" });
-        await refresh();
-      } catch {
-        /* keep last known state */
-      }
+    const interval = window.setInterval(() => {
+      runTick(false).catch(() => undefined);
     }, 60_000);
     return () => window.clearInterval(interval);
-  }, [ready, refresh]);
+  }, [ready, runTick]);
 
   useEffect(() => {
     if (!ready) return;
@@ -90,6 +136,13 @@ export function DealRoomProvider({ children }: { children: React.ReactNode }) {
     }, 30_000);
     return () => window.clearInterval(interval);
   }, [ready, refresh]);
+
+  useEffect(
+    () => () => {
+      if (noticeTimer.current) window.clearTimeout(noticeTimer.current);
+    },
+    [],
+  );
 
   const runAction = useCallback(
     async (id: string, action: HumanAction) => {
@@ -100,15 +153,17 @@ export function DealRoomProvider({ children }: { children: React.ReactNode }) {
       });
       if (!response.ok) throw new Error("Action failed.");
       await refresh();
+      showNotice("Decision recorded — workspace queue updated.");
     },
-    [refresh],
+    [refresh, showNotice],
   );
 
   const resetItems = useCallback(async () => {
     const response = await fetch("/api/deals/reset?demo=1", { method: "POST" });
     if (!response.ok) throw new Error("Reset failed.");
     await refresh();
-  }, [refresh]);
+    showNotice("Demo workspace reset — Acme 18% scenario restored.");
+  }, [refresh, showNotice]);
 
   const value = useMemo(
     () => ({
@@ -116,12 +171,14 @@ export function DealRoomProvider({ children }: { children: React.ReactNode }) {
       pressure,
       ready,
       loadError,
+      notice,
+      dismissNotice,
       getItem: (id: string) => items.find((item) => item.id === id),
       runAction,
       resetItems,
       refresh,
     }),
-    [items, pressure, ready, loadError, runAction, resetItems, refresh],
+    [items, pressure, ready, loadError, notice, dismissNotice, runAction, resetItems, refresh],
   );
 
   if (!ready) {
