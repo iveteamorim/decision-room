@@ -32,11 +32,27 @@ function hasLegalSignal(item: WorkItem) {
 }
 
 function hasPolicySignal(item: WorkItem) {
-  return (
-    item.policyBlock ||
-    item.approvalState === "policy_conflict" ||
-    item.stakeholders.some((entry) => entry.team === "Policy") ||
-    item.blockers.some((blocker) => /policy|margin|rule/i.test(blocker))
+  if (item.policyBlock || item.approvalState === "policy_conflict") {
+    return true;
+  }
+
+  const policyStakeholder = item.stakeholders.find((entry) => entry.team === "Policy");
+  if (policyStakeholder) {
+    if (policyStakeholder.position === "negotiate" || policyStakeholder.position === "reject") {
+      return true;
+    }
+    if (
+      policyStakeholder.position === "review" &&
+      /rule|governance|exception|threshold|margin/i.test(policyStakeholder.note)
+    ) {
+      return true;
+    }
+  }
+
+  return item.blockers.some((blocker) =>
+    /breaches margin policy|margin protection rule|rule \d|governance|rule exception|rule conflict/i.test(
+      blocker,
+    ),
   );
 }
 
@@ -70,13 +86,13 @@ export function getRoleActionOptions(item: WorkItem, role: ViewerRole): HumanAct
 export function roleWorkspaceNote(role: ViewerRole) {
   switch (role) {
     case "Finance":
-      return "Finance view — full approval queue and policy context.";
+      return "Finance view - full approval queue and policy context.";
     case "Sales":
-      return "Sales view — legal review deals are routed out of this queue.";
+      return "Sales view - legal review deals are routed out of this queue.";
     case "Legal":
-      return "Legal view — contract and liability decisions only.";
+      return "Legal view - contract and liability decisions only.";
     case "Policy":
-      return "Policy view — margin conflicts and rule exceptions only.";
+      return "Policy view - governance conflicts and rule exceptions only.";
     default:
       return "";
   }
