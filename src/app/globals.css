@@ -2079,16 +2079,16 @@ textarea {
 }
 
 .dr-decision-card {
-  padding: 40px 28px;
+  padding: 28px 28px;
   text-align: center;
   margin-bottom: 20px;
 }
 
 .dr-decision-card h2 {
-  margin: 10px 0;
-  font-size: clamp(3.5rem, 8vw, 6rem);
-  line-height: 0.9;
-  letter-spacing: -0.06em;
+  margin: 8px 0;
+  font-size: clamp(2.7rem, 5.8vw, 4.25rem);
+  line-height: 0.95;
+  letter-spacing: 0;
 }
 
 .dr-decision-title {
@@ -2098,10 +2098,10 @@ textarea {
 }
 
 .dr-decision-value {
-  margin-top: 12px;
-  font-size: clamp(2.2rem, 4vw, 3.6rem);
+  margin-top: 10px;
+  font-size: clamp(1.85rem, 3vw, 2.65rem);
   font-weight: 900;
-  letter-spacing: -0.05em;
+  letter-spacing: 0;
 }
 
 .dr-decision-metrics {
@@ -2109,7 +2109,7 @@ textarea {
   justify-content: center;
   flex-wrap: wrap;
   gap: 12px;
-  margin: 25px 0;
+  margin: 20px 0;
 }
 
 .dr-decision-metrics div {
@@ -2142,8 +2142,8 @@ textarea {
   display: inline-flex;
   justify-content: center;
   margin-top: 18px;
-  min-width: min(100%, 320px);
-  padding: 18px 28px;
+  min-width: 220px;
+  padding: 14px 24px;
   border-radius: 16px;
   background: var(--brand);
   color: #041019;

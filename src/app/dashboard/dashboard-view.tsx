@@ -118,9 +118,9 @@ export function DashboardView() {
 
       {rolePressure.liveCount > 0 ? (
         <section className="dr-pressure-strip" aria-label="Operational pressure">
-          <span>EUR {formatEur(rolePressure.eurAtRisk)} at risk</span>
+          <span>EUR {formatEur(rolePressure.eurAtRisk)} under review</span>
           <span>{rolePressure.breaches} SLA breach{rolePressure.breaches === 1 ? "" : "es"}</span>
-          <span>{rolePressure.needsAction} need action</span>
+          <span>{rolePressure.needsAction} require action</span>
         </section>
       ) : null}
 
@@ -147,7 +147,7 @@ export function DashboardView() {
             <p>Live queue</p>
             <h2>Ranked decisions</h2>
           </div>
-          <span>{decisions.length} live</span>
+          <span>{decisions.length} open decisions</span>
         </div>
 
         <div className="dr-case-list">
@@ -169,7 +169,11 @@ export function DashboardView() {
                   <div className="dr-case-meta">
                     <span>{item.status.replace(/_/g, " ")}</span>
                     <span>{item.owner}</span>
-                    <span>{item.blockers.length} blocker{item.blockers.length === 1 ? "" : "s"}</span>
+                    <span>
+                      {item.blockers.length === 0
+                        ? "no blockers"
+                        : `${item.blockers.length} blocker${item.blockers.length === 1 ? "" : "s"}`}
+                    </span>
                     <span className={breached ? "dr-meta-breach" : undefined}>
                       {formatCountdown(item.deadlineAt, now)}
                     </span>

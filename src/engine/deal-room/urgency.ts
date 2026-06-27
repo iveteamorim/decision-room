@@ -41,7 +41,7 @@ export function computePressureStats(items: WorkItem[], now = Date.now()): Press
   const needsAction = live.filter((item) => item.blockers.length > 0 || isSlaBreached(item, now));
 
   return {
-    eurAtRisk: breached.reduce((sum, item) => sum + item.financialImpactEur, 0),
+    eurAtRisk: live.reduce((sum, item) => sum + item.financialImpactEur, 0),
     breaches: breached.length,
     needsAction: needsAction.length,
     liveCount: live.length,

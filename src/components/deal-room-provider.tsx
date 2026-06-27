@@ -111,7 +111,7 @@ export function DealRoomProvider({ children }: { children: React.ReactNode }) {
       setPressure(snapshot.pressure);
       setLoadError(null);
     } catch {
-      useLocalDemo("Demo workspace loaded locally.");
+      useLocalDemo();
     }
   }, [useLocalDemo]);
 
@@ -139,7 +139,7 @@ export function DealRoomProvider({ children }: { children: React.ReactNode }) {
         if (!active) return;
         await refresh();
       } catch {
-        if (active) useLocalDemo("Demo workspace loaded locally.");
+        if (active) useLocalDemo();
       } finally {
         if (active) setReady(true);
       }

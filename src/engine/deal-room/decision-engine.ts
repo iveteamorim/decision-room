@@ -18,6 +18,15 @@ function enforceHumanControl(
   decisivePolicyAction?: DecisionAction,
 ): DecisionAction {
   if (decisivePolicyAction) return decisivePolicyAction;
+  if (
+    item.approvalState === "ready_to_send" &&
+    item.blockers.length === 0 &&
+    !item.policyBlock &&
+    item.riskScore <= 0.35 &&
+    item.confidence >= 0.78
+  ) {
+    return "approve";
+  }
   if (item.confidence < 0.55 && action !== "reject") return "review";
   if (item.blockers.length > 0 && action === "approve") return "review";
   return action;
