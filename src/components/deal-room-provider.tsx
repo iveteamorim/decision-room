@@ -1,8 +1,13 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import type { PressureStats, WorkItem } from "@/engine/deal-room";
-import type { HumanAction } from "@/lib/deal-actions";
+import {
+  computePressureStats,
+  materializeSeedItems,
+  type PressureStats,
+  type WorkItem,
+} from "@/engine/deal-room";
+import { applyHumanAction, type HumanAction } from "@/lib/deal-actions";
 
 type DealRoomContextValue = {
   items: WorkItem[];
@@ -19,13 +24,6 @@ type DealRoomContextValue = {
 
 const DealRoomContext = createContext<DealRoomContextValue | null>(null);
 
-const emptyPressure: PressureStats = {
-  eurAtRisk: 0,
-  breaches: 0,
-  needsAction: 0,
-  liveCount: 0,
-};
-
 async function fetchDeals() {
   const response = await fetch("/api/deals", { cache: "no-store" });
   if (!response.ok) {
@@ -35,19 +33,27 @@ async function fetchDeals() {
   return response.json() as Promise<{ items: WorkItem[]; pressure: PressureStats }>;
 }
 
-interface TickResponse {
+function buildLocalDemoSnapshot() {
+  const items = materializeSeedItems();
+  return {
+    items,
+    pressure: computePressureStats(items),
+  };
+}
+
+type TickResponse = {
   newEvents?: string[];
   priorityChanged?: boolean;
   topDealTitle?: string | null;
   scenarioMessage?: string | null;
-}
+};
 
 function buildTickNotice(tick: TickResponse) {
   if (tick.priorityChanged && tick.topDealTitle) {
-    return `Priority changed — ${tick.topDealTitle} is now #1.`;
+    return `Priority changed - ${tick.topDealTitle} is now #1.`;
   }
   if (tick.scenarioMessage) return tick.scenarioMessage;
-  if (tick.newEvents?.length) return "Live queue updated — new operational signal received.";
+  if (tick.newEvents?.length) return "Live queue updated - new operational signal received.";
   return null;
 }
 
@@ -67,34 +73,48 @@ export function DealRoomProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const showNotice = useCallback(
-    (message: string | null) => {
-      if (!message) return;
-      setNotice(message);
-      if (noticeTimer.current) window.clearTimeout(noticeTimer.current);
-      noticeTimer.current = window.setTimeout(() => setNotice(null), 7000);
+  const showNotice = useCallback((message: string | null) => {
+    if (!message) return;
+    setNotice(message);
+    if (noticeTimer.current) window.clearTimeout(noticeTimer.current);
+    noticeTimer.current = window.setTimeout(() => setNotice(null), 7000);
+  }, []);
+
+  const useLocalDemo = useCallback(
+    (message?: string) => {
+      const snapshot = buildLocalDemoSnapshot();
+      setItems(snapshot.items);
+      setPressure(snapshot.pressure);
+      setLoadError(null);
+      if (message) showNotice(message);
     },
-    [],
+    [showNotice],
   );
 
   const refresh = useCallback(async () => {
-    const snapshot = await fetchDeals();
-    setItems(snapshot.items);
-    setPressure(snapshot.pressure);
-    setLoadError(null);
-  }, []);
+    try {
+      const snapshot = await fetchDeals();
+      setItems(snapshot.items);
+      setPressure(snapshot.pressure);
+      setLoadError(null);
+    } catch {
+      useLocalDemo("Demo workspace loaded locally.");
+    }
+  }, [useLocalDemo]);
 
   const runTick = useCallback(
     async (silent = false) => {
-      const response = await fetch("/api/deals/tick", { method: "POST" });
-      if (!response.ok) return;
-      const tick = (await response.json()) as TickResponse;
-      await refresh();
-      if (!silent) {
-        showNotice(buildTickNotice(tick));
+      try {
+        const response = await fetch("/api/deals/tick", { method: "POST" });
+        if (!response.ok) throw new Error("Tick failed.");
+        const tick = (await response.json()) as TickResponse;
+        await refresh();
+        if (!silent) showNotice(buildTickNotice(tick));
+      } catch {
+        if (!items.length) useLocalDemo();
       }
     },
-    [refresh, showNotice],
+    [items.length, refresh, showNotice, useLocalDemo],
   );
 
   useEffect(() => {
@@ -105,11 +125,8 @@ export function DealRoomProvider({ children }: { children: React.ReactNode }) {
         await fetch("/api/deals/tick", { method: "POST" });
         if (!active) return;
         await refresh();
-      } catch (error) {
-        if (active) {
-          setPressure(emptyPressure);
-          setLoadError(error instanceof Error ? error.message : "Failed to connect to deal store.");
-        }
+      } catch {
+        if (active) useLocalDemo("Demo workspace loaded locally.");
       } finally {
         if (active) setReady(true);
       }
@@ -119,7 +136,7 @@ export function DealRoomProvider({ children }: { children: React.ReactNode }) {
     return () => {
       active = false;
     };
-  }, [refresh]);
+  }, [refresh, useLocalDemo]);
 
   useEffect(() => {
     if (!ready) return;
@@ -146,24 +163,36 @@ export function DealRoomProvider({ children }: { children: React.ReactNode }) {
 
   const runAction = useCallback(
     async (id: string, action: HumanAction) => {
-      const response = await fetch(`/api/deals/${id}/action`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action }),
-      });
-      if (!response.ok) throw new Error("Action failed.");
-      await refresh();
-      showNotice("Decision recorded — workspace queue updated.");
+      try {
+        const response = await fetch(`/api/deals/${id}/action`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action }),
+        });
+        if (!response.ok) throw new Error("Action failed.");
+        await refresh();
+      } catch {
+        setItems((current) => {
+          const next = current.map((item) => (item.id === id ? applyHumanAction(item, action) : item));
+          setPressure(computePressureStats(next));
+          return next;
+        });
+      }
+      showNotice("Decision recorded - workspace queue updated.");
     },
     [refresh, showNotice],
   );
 
   const resetItems = useCallback(async () => {
-    const response = await fetch("/api/deals/reset?demo=1", { method: "POST" });
-    if (!response.ok) throw new Error("Reset failed.");
-    await refresh();
-    showNotice("Demo workspace reset — Acme 18% scenario restored.");
-  }, [refresh, showNotice]);
+    try {
+      const response = await fetch("/api/deals/reset?demo=1", { method: "POST" });
+      if (!response.ok) throw new Error("Reset failed.");
+      await refresh();
+      showNotice("Demo workspace reset - Acme 18% scenario restored.");
+    } catch {
+      useLocalDemo("Demo workspace reset - Acme 18% scenario restored.");
+    }
+  }, [refresh, showNotice, useLocalDemo]);
 
   const value = useMemo(
     () => ({

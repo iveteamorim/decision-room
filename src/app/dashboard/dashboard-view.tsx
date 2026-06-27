@@ -25,7 +25,7 @@ export function DashboardView() {
   const demoMode = searchParams.get("demo") === "1";
   const [showAllDeals, setShowAllDeals] = useState(false);
   const [now, setNow] = useState(() => Date.now());
-  const { items, resetItems, ready, loadError } = useDealRoom();
+  const { items, resetItems, ready } = useDealRoom();
   const { role } = useViewerRole();
 
   useEffect(() => {
@@ -80,19 +80,6 @@ export function DashboardView() {
         <article className="dr-decision-card">
           <p className="dr-kicker">Loading workspace</p>
           <p className="dr-decision-note">Syncing live deal queue...</p>
-        </article>
-      </main>
-    );
-  }
-
-  if (loadError) {
-    return (
-      <main className="dr-page">
-        <DrNav active="dashboard" />
-        <article className="dr-decision-card">
-          <p className="dr-kicker">Workspace unavailable</p>
-          <h2 className="review">Connection required</h2>
-          <p className="dr-decision-note">{loadError}</p>
         </article>
       </main>
     );
