@@ -1,6 +1,6 @@
 # Failure Modes
 
-This document captures the main failure modes expected in Decision Room as it moves from demo-grade decision support toward production-grade operational tooling.
+This document captures the main failure modes expected as Decision Room moves toward production-grade decision governance.
 
 ## 001 - Policy collisions
 

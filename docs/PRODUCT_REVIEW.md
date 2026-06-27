@@ -37,7 +37,7 @@ Decision Room gives teams one governed workspace to answer:
 - What changed after human action?
 - What evidence exists for audit or review?
 
-## Why This Is Not Just AI
+## AI Boundary
 
 The product does not rely on AI as the decision authority.
 
@@ -97,4 +97,4 @@ A reviewer should evaluate Decision Room on:
 - Are human checkpoints explicit?
 - Are failure modes acknowledged?
 - Is the architecture extensible?
-- Does the product feel closer to a SaaS than a toy demo?
+- Does the product feel like a coherent SaaS workflow?

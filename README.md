@@ -28,7 +28,7 @@ Decision Room turns an approval request into a structured decision brief:
 
 ## What It Demonstrates
 
-- Product-grade approval workflow, not a chatbot wrapper
+- Product-grade approval workflow with governed recommendations
 - Deterministic policy evaluation before score-based recommendations
 - Explainable scoring across value, margin, urgency, risk, and confidence
 - Human-in-the-loop governance for sensitive or low-confidence cases

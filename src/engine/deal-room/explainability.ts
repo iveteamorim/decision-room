@@ -18,7 +18,7 @@ export function buildRationale(
     `Recommendation: ${action}`,
     `Composite score: ${scoring.breakdown.total.toFixed(2)}`,
     `Confidence: ${item.confidence.toFixed(2)}`,
-    `AI-assisted flags: ${scoring.aiAssistedSignal.flags.join(", ")}`,
+    `Context flags: ${scoring.aiAssistedSignal.flags.join(", ")}`,
     policyEvaluation.decisivePolicy
       ? `Policy override: ${policyEvaluation.decisivePolicy.id} (${policyEvaluation.decisivePolicy.triggeredBy})`
       : "Policy override: none",
@@ -52,7 +52,7 @@ export function buildExplanation(
       source: "policy",
     },
     {
-      title: "AI-assisted context",
+      title: "Context signals",
       body: `${scoring.aiAssistedSignal.flags.join(", ")}. ${scoring.aiAssistedSignal.explanation}`,
       source: "score",
     },
