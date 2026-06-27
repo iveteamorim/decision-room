@@ -24,8 +24,21 @@ type DealRoomContextValue = {
 
 const DealRoomContext = createContext<DealRoomContextValue | null>(null);
 
+async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 2500) {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(input, {
+      ...init,
+      signal: controller.signal,
+    });
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}
+
 async function fetchDeals() {
-  const response = await fetch("/api/deals", { cache: "no-store" });
+  const response = await fetchWithTimeout("/api/deals", { cache: "no-store" });
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as { error?: string } | null;
     throw new Error(body?.error ?? "Failed to load deals.");
@@ -105,7 +118,7 @@ export function DealRoomProvider({ children }: { children: React.ReactNode }) {
   const runTick = useCallback(
     async (silent = false) => {
       try {
-        const response = await fetch("/api/deals/tick", { method: "POST" });
+        const response = await fetchWithTimeout("/api/deals/tick", { method: "POST" });
         if (!response.ok) throw new Error("Tick failed.");
         const tick = (await response.json()) as TickResponse;
         await refresh();
@@ -122,7 +135,7 @@ export function DealRoomProvider({ children }: { children: React.ReactNode }) {
 
     async function bootstrap() {
       try {
-        await fetch("/api/deals/tick", { method: "POST" });
+        await fetchWithTimeout("/api/deals/tick", { method: "POST" });
         if (!active) return;
         await refresh();
       } catch {
@@ -164,7 +177,7 @@ export function DealRoomProvider({ children }: { children: React.ReactNode }) {
   const runAction = useCallback(
     async (id: string, action: HumanAction) => {
       try {
-        const response = await fetch(`/api/deals/${id}/action`, {
+        const response = await fetchWithTimeout(`/api/deals/${id}/action`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action }),
@@ -185,7 +198,7 @@ export function DealRoomProvider({ children }: { children: React.ReactNode }) {
 
   const resetItems = useCallback(async () => {
     try {
-      const response = await fetch("/api/deals/reset?demo=1", { method: "POST" });
+      const response = await fetchWithTimeout("/api/deals/reset?demo=1", { method: "POST" });
       if (!response.ok) throw new Error("Reset failed.");
       await refresh();
       showNotice("Demo workspace reset - Acme 18% scenario restored.");
