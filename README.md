@@ -1,143 +1,127 @@
-﻿# NOVUA Decision Room
+# NOVUA Decision Room
 
-**AI-assisted decision support for pricing, discounts, and commercial approvals.**
+**Commercial decision governance for pricing, discounts, and approval workflows.**
 
-NOVUA Decision Room is an AI-assisted decision workspace for pricing, discounts, and approval governance.
+NOVUA Decision Room is a B2B decision workspace for teams that need to move quickly without losing control over margin, risk, policy, or approval accountability.
 
-It combines deterministic policies, weighted scoring, human checkpoints, explainability traces, and simulation workflows.
+It combines deterministic policies, weighted scoring, human checkpoints, explainability traces, simulation, and audit events into a single approval workflow.
 
-AI supports the reasoning process, but policy and human approval remain the source of truth.
-
-NOVUA Decision Room helps teams evaluate commercial decisions before approval by combining deal value, margin, urgency, risk, confidence, policy rules, and transparent reasoning.
+The system does not approve decisions autonomously. It prepares the case, explains the trade-offs, routes the right review, and keeps the final decision human-controlled.
 
 Live demo: https://decision-room-six.vercel.app/dashboard
 
-## Week 1 Demo Readiness
-
-This repository includes:
-
-* `docs/DEMO_SCRIPT.md` — 15-minute live walkthrough
-* `docs/DEPLOY_CHECKLIST.md` — production demo checklist
-* optional basic-auth protection for shared demos via middleware
-
-## Problem
+## Product Thesis
 
 Commercial approvals often happen under pressure across Sales, Finance, Legal, and leadership.
 
-Teams need to move fast, but they also need to protect margin, avoid risky terms, and keep approval logic consistent.
+Teams need speed, but they also need to protect margin, avoid risky terms, and keep decision logic consistent.
 
-## Product
+Decision Room turns an approval request into a structured decision brief:
 
-Decision Room prepares every decision with:
+- What is being requested
+- Which policy rules apply
+- What risk or margin exposure exists
+- Who needs to review it
+- What action is recommended
+- Why the system reached that recommendation
+- What changed after the human decision
 
-* Margin and pricing risk analysis
-* Policy checks before approval
-* Weighted scoring across explicit signals
-* Explainable recommendations
-* Human review for sensitive or low-confidence cases
-* Simulation for pricing strategy changes
+## What It Demonstrates
 
-The system does not approve deals autonomously. It prepares the decision, explains the trade-offs, and keeps final approval human-controlled.
+- Product-grade approval workflow, not a chatbot wrapper
+- Deterministic policy evaluation before score-based recommendations
+- Explainable scoring across value, margin, urgency, risk, and confidence
+- Human-in-the-loop governance for sensitive or low-confidence cases
+- Role-aware workspace views for Finance, Sales, Legal, and Policy
+- Simulation for comparing strategy changes before changing live workflows
+- Audit-oriented event modeling for reviewability and accountability
 
 ## Core Workflow
 
-1. **Decision intake**  
-   A commercial request enters the workspace with structured inputs: value, margin, risk, urgency, confidence, and approval deadline.
+1. **Decision intake**
+   A commercial request enters the workspace with structured inputs: value, margin, risk, urgency, confidence, and deadline.
 
-2. **Policy evaluation**  
-   Hard rules protect margin thresholds, legal exposure, and high-risk approvals before score-based recommendations.
+2. **Policy evaluation**
+   Hard rules protect margin thresholds, legal exposure, and high-risk approvals before scoring is considered.
 
-3. **Weighted scoring**  
-   The engine calculates an approval-readiness score from inspectable signals.
+3. **Weighted scoring**
+   The engine calculates approval readiness from inspectable business signals.
 
-4. **Recommendation**  
+4. **Recommendation**
    Each case maps to one action: approve, negotiate, review, or reject.
 
-5. **Reasoning trace**  
-   The UI explains why the recommendation was made and which policy or score threshold influenced it.
+5. **Workflow planning**
+   The system assigns checkpoints, owners, blockers, and next actions.
 
-6. **Simulation**  
-   Teams can test strategy changes, such as what changes if margin matters more.
+6. **Reasoning trace**
+   The UI explains which policies, scores, and thresholds influenced the recommendation.
 
-## Decision Engine Architecture
+7. **Human action and audit**
+   A human operator takes the final action, and the workspace records the decision trail.
 
-The UI is intentionally thin. The core product logic lives under:
+8. **Simulation**
+   Teams compare strategy profiles, such as margin-first or revenue-first, before changing operating rules.
+
+## Architecture
+
+The UI is intentionally thin. Product logic lives under `src/engine/deal-room/` and is exposed through stable engine functions.
 
 ```txt
 src/engine/deal-room/
-|-- decision-engine.ts   # Orchestrates policy, scoring, workflow, and explanation
-|-- policies.ts          # Deterministic approval governance and escalation registry
-|-- scoring.ts           # Deterministic + AI-assisted scoring contract
-|-- workflow.ts          # Approval checkpoints, owners, blockers, and side effects
-|-- explainability.ts    # Reasoning trace and auditable recommendation narrative
+|-- decision-engine.ts   # Orchestrates policy, scoring, workflow, explanation
+|-- policies.ts          # Deterministic governance and escalation registry
+|-- scoring.ts           # Weighted scoring contract
+|-- workflow.ts          # Checkpoints, owners, blockers, side effects
+|-- explainability.ts    # Reasoning trace and auditable narrative
 |-- simulation.ts        # Portfolio-level scenario simulation
 |-- intake.ts            # API payload validation before engine execution
+|-- events.ts            # Decision event model
 |-- fixtures.ts          # Enterprise-style approval examples
 |-- types.ts             # Domain contracts
 `-- index.ts             # Public engine API
 ```
 
-### Operating Principles
+Public API surface:
 
-* Deterministic rules are the source of truth for policy violations.
-* AI-assisted reasoning is contextual and assistive, not autonomous approval authority.
-* Every recommendation returns policy trace, score evidence, confidence context, workflow checkpoints, and operational side effects.
-* Human checkpoints remain explicit for low-confidence, high-risk, conflicted, or policy-sensitive decisions.
-* Approval chains are modeled across Sales, Finance, Legal, Ops, and Policy.
-* Simulations run through the same engine contract as live recommendations.
+- `decideItem(item, weights?)`
+- `evaluatePolicies(item)`
+- `scoreDeal(item, weights?)`
+- `buildWorkflowPlan(item, action, policies)`
+- `simulateDealPortfolio(items, scenario?)`
 
-### Engine Flow
+For deeper engineering context, see:
 
-```txt
-Decision intake
-  -> deterministic policy evaluation
-  -> AI-assisted context adapter
-  -> weighted scoring
-  -> action selection
-  -> workflow/checkpoint planning
-  -> explanation + audit trace
-  -> UI/API consumer
-```
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+- [`docs/PRODUCT_REVIEW.md`](docs/PRODUCT_REVIEW.md)
+- [`docs/DECISIONS.md`](docs/DECISIONS.md)
+- [`docs/FAILURE_MODES.md`](docs/FAILURE_MODES.md)
+- [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md)
+- [`docs/DEPLOY_CHECKLIST.md`](docs/DEPLOY_CHECKLIST.md)
 
-### Public API Surface
+## Operating Principles
 
-The app consumes the engine through stable functions:
-
-* `decideItem(item, weights?)`
-* `evaluatePolicies(item)`
-* `scoreDeal(item, weights?)`
-* `buildWorkflowPlan(item, action, policies)`
-* `simulateDealPortfolio(items, scenario?)`
-
-Compatibility adapters remain in `src/lib/*`, but new product logic should be added to `src/engine/deal-room/*`.
-
-## Why It Matters
-
-This is decision support, not a chatbot wrapper.
-
-Decision Room shows how AI can support real business governance:
-
-* Explainability
-* Approval traceability
-* Human-in-the-loop review
-* Policy-aware automation
-* Strategy simulation before workflow changes
+- Policy rules are evaluated before weighted scoring.
+- Recommendations must be inspectable and explainable.
+- AI can assist context and reasoning, but policy and human approval remain the source of truth.
+- High-risk, low-confidence, conflicted, or policy-sensitive cases require explicit checkpoints.
+- Simulation is strategy support, not autonomous execution.
+- Auditability is treated as core product behavior, not as a reporting add-on.
 
 ## Stack
 
-* Next.js App Router
-* TypeScript
-* Supabase (deals + deal_events persistence)
-* Policy evaluation engine
-* Weighted scoring model
-* Vercel deployment
+- Next.js App Router
+- TypeScript
+- Supabase for `deals` and `deal_events`
+- Deterministic policy engine
+- Weighted scoring model
+- Vercel deployment
 
 ## Local Setup
 
 1. Create a Supabase project and run `supabase/schema.sql` in the SQL Editor.
 2. Copy `.env.example` to `.env.local` and set:
-   * `NEXT_PUBLIC_SUPABASE_URL`
-   * `SUPABASE_SERVICE_ROLE_KEY`
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `SUPABASE_SERVICE_ROLE_KEY`
 3. Install and start:
 
 ```bash
@@ -151,19 +135,19 @@ On first request, the API seeds `deals` and `deal_events` from fixtures automati
 
 ## Vercel Deploy
 
-Add the same Supabase env vars in the Vercel project settings. Optional: set `DEMO_MODE=1` to enable `/api/deals/reset?demo=1` in production demos.
+Add the same Supabase environment variables in Vercel.
 
-For password-protected demos, also set:
+Optional demo controls:
 
-* `DEMO_BASIC_AUTH_USER`
-* `DEMO_BASIC_AUTH_PASSWORD`
+- `DEMO_MODE=1` enables `/api/deals/reset?demo=1` for production demos.
+- `DEMO_BASIC_AUTH_USER` and `DEMO_BASIC_AUTH_PASSWORD` enable basic-auth protection for shared demos.
 
 ## Scripts
 
-* `npm run dev`
-* `npm run build`
-* `npm run start`
-* `npm run lint`
+- `npm run dev`
+- `npm run build`
+- `npm run start`
+- `npm run lint`
 
 ## License
 
@@ -171,7 +155,6 @@ This repository is source-available and proprietary.
 
 Copyright (c) 2026 Ivete de Amorim. All rights reserved.
 
-No permission is granted to use, copy, modify, redistribute, sell, or offer
-this software as a commercial service without prior written permission from the
-author. Commercial licensing is available on request via
-`iveteamorim@gmail.com`.
+No permission is granted to use, copy, modify, redistribute, sell, or offer this software as a commercial service without prior written permission from the author.
+
+Commercial licensing is available on request via `iveteamorim@gmail.com`.

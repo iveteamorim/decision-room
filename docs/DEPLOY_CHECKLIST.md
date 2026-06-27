@@ -1,4 +1,4 @@
-# NOVUA Decision Room — Week 1 Deploy Checklist
+# NOVUA Decision Room - Production Demo Checklist
 
 ## Before Deploy
 
