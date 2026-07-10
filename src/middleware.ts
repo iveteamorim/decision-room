@@ -2,6 +2,8 @@ import { NextResponse, type NextRequest } from "next/server";
 
 function isBypassedPath(pathname: string) {
   return (
+    pathname === "/" ||
+    pathname === "/login" ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon") ||
     pathname.startsWith("/public") ||
